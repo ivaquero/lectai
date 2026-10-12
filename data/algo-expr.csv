@@ -1,0 +1,5 @@
+中缀表达式,前缀表达式,后缀表达式
+(A+B)*C,*+ABC,AB+C*
+A+B*C+D,++A*BCD,ABC*+D+
+(A+B)*(C+D),*+AB+CD,AB+CD+*
+A+B+C+D,+++ABCD,AB+C+D+

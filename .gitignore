@@ -1,0 +1,47 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+
+# General
+.DS_Store
+
+# Thumbnails
+._*
+
+# C++
+*.dSYM
+runs
+build
+
+# Videos
+*.mp4
+*.webm
+*.avi
+
+# custom
+*_svg
+*.pdf
+*.jfif
+*.xcf
+*.pptx
+*.docx
+*.pth
+*.pt
+*.exe
+
+# Downloaded model weights (dlib / dnn), not for version control
+*.dat
+*.bz2
+
+.build
+.tmp
+.tmp-*
+.tmp_*
+.workbuddy
+images
+models
+output
+post
+test.*
