@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>排序算法可视化 · 数据结构与算法</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="mark"></span>
+    <h1>排序算法可视化</h1>
+    <span class="sub">数据结构与算法 · 交互演示</span>
+  </div>
+  <div class="topbar-note">空格播放 / 暂停 &nbsp;·&nbsp; ← → 单步 &nbsp;·&nbsp; R 重置 &nbsp;·&nbsp; N 随机</div>
+</header>
+
+<main class="layout">
+
+  <section class="stage">
+    <nav class="tabs" id="algo-tabs" aria-label="选择排序算法"></nav>
+
+    <div class="canvas-host" id="canvas-host">
+      <div class="canvas-fallback">正在加载画布…</div>
+    </div>
+
+    <div class="legend" id="legend"></div>
+
+    <div class="complexity" id="complexity" title="复杂度数值与课程数据 data/algo-sort.csv 一致"></div>
+
+    <div class="readout">
+      <span class="readout-label">当前操作</span>
+      <span class="readout-text" id="info">准备就绪</span>
+    </div>
+
+    <div class="transport">
+      <div class="transport-buttons">
+        <button type="button" id="btn-first" title="回到开头（Home）">⏮</button>
+        <button type="button" id="btn-prev" title="上一步（←）">◀</button>
+        <button type="button" id="btn-play" class="primary" title="播放 / 暂停（空格）">▶ 播放</button>
+        <button type="button" id="btn-next" title="下一步（→）">▶</button>
+        <button type="button" id="btn-last" title="跳到末尾（End）">⏭</button>
+        <button type="button" id="btn-reset" title="重置（R）">↺ 重置</button>
+      </div>
+      <div class="transport-speed">
+        <label for="speed">速度</label>
+        <input type="range" id="speed" min="1" max="100" value="55">
+        <span class="mono" id="speed-label">24 步/秒</span>
+      </div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <aside class="side">
+
+    <div class="card">
+      <h2>自定义数据</h2>
+      <textarea id="input" rows="2" spellcheck="false" aria-label="自定义数据"></textarea>
+      <p class="hint" id="input-hint">用逗号、空格或换行分隔，2–64 个数</p>
+      <div class="row">
+        <button type="button" id="btn-apply" class="primary">应用</button>
+        <button type="button" id="btn-random">随机</button>
+      </div>
+      <div class="row">
+        <button type="button" id="btn-asc">升序</button>
+        <button type="button" id="btn-desc">降序</button>
+        <button type="button" id="btn-nearly">近乎有序</button>
+      </div>
+      <div class="field">
+        <label for="size">数据规模 <span class="mono" id="size-label">24</span></label>
+        <input type="range" id="size" min="4" max="64" value="24">
+      </div>
+    </div>
+
+    <div class="card grow">
+      <h2>伪代码</h2>
+      <div class="pseudo" id="pseudo"></div>
+      <p class="hint small">灰色行为结构性语句，不单独高亮。</p>
+    </div>
+
+  </aside>
+
+</main>
+
+<script src="vendor/p5.min.js"></script>
+<script src="js/algorithms.js"></script>
+<script src="js/sketch.js"></script>
+</body>
+</html>
