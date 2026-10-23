@@ -1,0 +1,5 @@
+函数,作用,<string>,<vector>,<deque>,<list>,<set>,<map>
+.resize(),,✓,✓,✓,✓,,
+.clear(),,,✓,,,,
+.swap(),交换指针,✓,✓,✓,✓,,
+.reserve(),预留空间,,✓,,,,

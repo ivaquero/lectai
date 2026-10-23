@@ -1,0 +1,4 @@
+函数,作用,<string>,<vector>,<deque>,<list>,<set>,<map>
+.size(),,,✓,✓,✓,✓,
+.capacity(),,,✓,,,✓,
+.empty(),,,✓,,,✓,

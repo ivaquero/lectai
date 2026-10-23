@@ -40,8 +40,5 @@ build
 .tmp-*
 .tmp_*
 .workbuddy
-images
-models
-output
-post
-test.*
+node_modules
+

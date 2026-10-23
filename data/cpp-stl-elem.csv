@@ -1,0 +1,12 @@
+函数,作用,<string>,<vector>,<deque>,<list>,<set>,<map>
+双向,,,,✓,✓,,
+.assign(),,✓,✓,✓,✓,,
+.insert(),插入,✓,✓,✓,✓,✓,✓
+.erase(),删除,✓,✓,✓,✓,,✓
+.push_back(),尾添加,,✓,✓,✓,,
+.pop_back(),尾刨除,,✓,✓,✓,,
+.push_front(),头添加,,,✓,✓,,
+.pop_front(),头刨除,,,✓,✓,,
+.sort(),顺序,,,,✓,,
+.reverse(),逆序,,,✓,,,
+.compare(),比较,✓,,,,,
