@@ -41,4 +41,4 @@ build
 .tmp_*
 .workbuddy
 node_modules
-
+performance

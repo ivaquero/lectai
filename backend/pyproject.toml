@@ -1,0 +1,25 @@
+[project]
+name = "lectai-backend"
+version = "1.1.0"
+description = "数据结构学习平台后端：FastAPI 服务 + 轨迹生成 + 题库判题 + AI 答疑"
+# 完整文档已并入仓库根 README.md，backend/ 不再单列 README，故不设 readme 字段。
+requires-python = ">=3.14"
+authors = [{ name = "ivaquero" }]
+
+# Python 版本由 backend/.python-version 固定为 3.14；uv 据此选择/下载解释器。
+
+# 与旧 requirements.txt 保持一致的下限，uv 会解析到当前最新兼容版本并锁进 uv.lock。
+dependencies = [
+  "fastapi>=0.110",
+  "pydantic>=2.6",
+  "uvicorn[standard]>=0.29",
+]
+
+[dependency-groups]
+# 未来若要 pytest / ruff 之类的开发工具，写在这里；`uv sync --group dev` 才装。
+dev = []
+
+[tool.uv]
+# 本项目不是可分发的 Python 包（没有 __init__.py 顶层，main.py 直接跑），
+# 关掉 install 步骤，让 `uv sync` 只装依赖、不去 build 整个 backend/ 目录。
+package = false

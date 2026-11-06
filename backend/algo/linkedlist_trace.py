@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 algo/linkedlist_trace.py —— 单链表「步骤轨迹」生成器
 ==========================================================================
@@ -27,7 +26,6 @@ algo/linkedlist_trace.py —— 单链表「步骤轨迹」生成器
 """
 
 import itertools
-from typing import Optional
 
 # 为了投影可读性限制结点数（超出后文字缩得太小）
 MAX_NODES = 12
@@ -36,13 +34,13 @@ MAX_NODES = 12
 class Node:
     """链表结点：value 数据域 + next 指针域；id 生成后永不变，前端靠它定位"""
 
-    __slots__ = ("id", "value", "next")
+    __slots__ = ("id", "next", "value")
     _seq = itertools.count(1)
 
     def __init__(self, value: int):
         self.id = f"n{next(Node._seq)}"
         self.value = value
-        self.next: Optional["Node"] = None
+        self.next: Node | None = None
 
 
 class OpError(Exception):
@@ -55,22 +53,22 @@ class OpError(Exception):
 # 一步内不改就延续到下一步，减少重复样板。
 # ==========================================================================
 
-class Tracer:
 
+class Tracer:
     def __init__(self):
         self.steps: list = []
-        self.visited = 0          # 已访问结点数
-        self.moves = 0            # 指针移动次数
-        self.compares = 0         # 比较次数
-        self.ptr: dict = {}       # 指针名 -> Node | "NULL" | None
-        self.aside: list = []     # 暂离主链的结点
+        self.visited = 0  # 已访问结点数
+        self.moves = 0  # 指针移动次数
+        self.compares = 0  # 比较次数
+        self.ptr: dict = {}  # 指针名 -> Node | "NULL" | None
+        self.aside: list = []  # 暂离主链的结点
         self._visited_ids: set = set()
         self._new_ids: set = set()
 
     # ---------- 内部工具 ----------
 
     @staticmethod
-    def _chain(head: Optional[Node]) -> list:
+    def _chain(head: Node | None) -> list:
         out, p, i = [], head, 1
         while p:
             out.append({"id": p.id, "value": p.value, "label": f"a{i}"})
@@ -89,7 +87,7 @@ class Tracer:
             out[k] = v.id if isinstance(v, Node) else v
         return out
 
-    def _mark(self, head: Optional[Node], compare, remove) -> dict:
+    def _mark(self, head: Node | None, compare, remove) -> dict:
         # visited / new 按链表顺序输出，aside 里的结点排在最后
         order, p = [], head
         while p:
@@ -110,8 +108,9 @@ class Tracer:
 
     # ---------- 记录步骤 ----------
 
-    def push(self, head: Optional[Node], line, info,
-             compare=(), remove=(), ptr=None, aside=None) -> dict:
+    def push(
+        self, head: Node | None, line, info, compare=(), remove=(), ptr=None, aside=None
+    ) -> dict:
         """
         head    当前主链头结点（必传，快照从这里遍历）
         line    高亮代码行号（0 开始；None 表示不高亮）
@@ -232,7 +231,7 @@ OPS = {
 }
 
 
-def _meta(op: str, head: Optional[Node]) -> dict:
+def _meta(op: str, head: Node | None) -> dict:
     """组一条完整的返回体：元数据 + 轨迹 + 最终长度"""
     n, p = 0, head
     while p:
@@ -249,7 +248,7 @@ def _meta(op: str, head: Optional[Node]) -> dict:
     }
 
 
-def _check_capacity(head: Optional[Node]):
+def _check_capacity(head: Node | None):
     n, p = 0, head
     while p:
         n += 1
@@ -261,6 +260,7 @@ def _check_capacity(head: Optional[Node]):
 # ==========================================================================
 # 六个操作。lst 是一个带 .head 属性的对象（见下方 TraceList）
 # ==========================================================================
+
 
 def op_build(lst, values: list) -> dict:
     """尾插法建表：head 从 NULL 开始，逐个接到尾部"""
@@ -289,7 +289,12 @@ def op_build(lst, values: list) -> dict:
             tail.next = s
             t.aside = []
             t.ptr = {"s": None}
-            t.push(lst.head, 2, f"尾结点的 next 接上 s（{tail.value} → {x}）", compare=[s.id])
+            t.push(
+                lst.head,
+                2,
+                f"尾结点的 next 接上 s（{tail.value} → {x}）",
+                compare=[s.id],
+            )
         tail = s
         t.push(lst.head, 3, f"{x} 已入链，tail 后移", ptr={"tail": s})
 
@@ -317,9 +322,12 @@ def op_insert_head(lst, value: int) -> dict:
     # 接链：s 进入主链，但 head 还没动 —— 这是本操作的教学重点
     s.next = old_head
     t.ptr = {"s": s}
-    t.push(lst.head, 2,
-           "s->next = head：s 已接上原链，但 head 还指着旧首元结点",
-           compare=[s.id])
+    t.push(
+        lst.head,
+        2,
+        "s->next = head：s 已接上原链，但 head 还指着旧首元结点",
+        compare=[s.id],
+    )
 
     lst.head = s
     t.aside = []
@@ -356,9 +364,13 @@ def op_insert_tail(lst, value: int) -> dict:
             t.moves += 1
             t._visited_ids.add(p.id)
             t.ptr = {"p": nxt}
-            t.push(lst.head, 4,
-                   f"p->next 不为空，p 后移到第 {_pos_of(lst.head, nxt)} 个结点",
-                   compare=[p.id], ptr={"p": nxt})
+            t.push(
+                lst.head,
+                4,
+                f"p->next 不为空，p 后移到第 {_pos_of(lst.head, nxt)} 个结点",
+                compare=[p.id],
+                ptr={"p": nxt},
+            )
             p = nxt
         # p 已是尾结点：p->next 为 NULL
         t.push(lst.head, 4, "p->next == NULL：p 就是尾结点", compare=[p.id])
@@ -366,7 +378,9 @@ def op_insert_tail(lst, value: int) -> dict:
         p.next = s
         t.aside = []
         t.ptr = {"p": p, "s": None}
-        t.push(lst.head, 5, f"p->next = s：{p.value} 接上 {value}", compare=[p.id, s.id])
+        t.push(
+            lst.head, 5, f"p->next = s：{p.value} 接上 {value}", compare=[p.id, s.id]
+        )
 
     t.push(lst.head, None, f"尾插 {value} 完成，当前表长 {len(t.steps[-1]['nodes'])}")
     out = _meta("insert-tail", lst.head)
@@ -389,13 +403,20 @@ def op_delete_pos(lst, pos: int) -> dict:
     if pos == 1:
         q = lst.head
         t.ptr = {"q": q, "head": lst.head}
-        t.push(lst.head, 1, "pos = 1：删的是首元结点，q = head", compare=[q.id], remove=[q.id])
+        t.push(
+            lst.head,
+            1,
+            "pos = 1：删的是首元结点，q = head",
+            compare=[q.id],
+            remove=[q.id],
+        )
 
         lst.head = q.next
         t.ptr = {"q": q, "head": q.next}
         t.aside = [q]
-        t.push(lst.head, 1, "head = head->next：head 越过 q，q 已离开主链",
-               remove=[q.id])
+        t.push(
+            lst.head, 1, "head = head->next：head 越过 q，q 已离开主链", remove=[q.id]
+        )
 
         t.ptr = {"q": None}
         t.aside = []
@@ -415,14 +436,18 @@ def op_delete_pos(lst, pos: int) -> dict:
 
         q = p.next
         t.ptr = {"p": p, "q": q}
-        t.push(lst.head, 4, f"q = p->next：q 指向待删除的第 {pos} 个结点",
-               compare=[p.id, q.id], remove=[q.id])
+        t.push(
+            lst.head,
+            4,
+            f"q = p->next：q 指向待删除的第 {pos} 个结点",
+            compare=[p.id, q.id],
+            remove=[q.id],
+        )
 
         p.next = q.next
         t.ptr = {"p": p, "q": q}
         t.aside = [q]
-        t.push(lst.head, 5, "p->next = q->next：摘链完成，q 已离开主链",
-               remove=[q.id])
+        t.push(lst.head, 5, "p->next = q->next：摘链完成，q 已离开主链", remove=[q.id])
 
         t.ptr = {"q": None}
         t.aside = []
@@ -447,20 +472,31 @@ def op_delete_value(lst, value: int) -> dict:
     while p is not None:
         t.compares += 1
         if p.value == value:
-            t.push(lst.head, 2, f"p->data == {value}：命中，是第 {pos} 个结点",
-                   compare=[p.id], remove=[p.id])
+            t.push(
+                lst.head,
+                2,
+                f"p->data == {value}：命中，是第 {pos} 个结点",
+                compare=[p.id],
+                remove=[p.id],
+            )
             found = p
             break
         t._visited_ids.add(p.id)
-        t.push(lst.head, 2, f"第 {pos} 个结点是 {p.value} ≠ {value}，继续",
-               compare=[p.id])
+        t.push(
+            lst.head, 2, f"第 {pos} 个结点是 {p.value} ≠ {value}，继续", compare=[p.id]
+        )
         prev, p = p, p.next
         pos += 1
         t.moves += 1
         t.ptr = {"prev": prev, "p": p if p else "NULL"}
-        t.push(lst.head, 3,
-               "prev = p，p = p->next：双指针同步后移" if p else "p 已走到 NULL，链里没有这个值",
-               ptr={"prev": prev, "p": p if p else "NULL"})
+        t.push(
+            lst.head,
+            3,
+            "prev = p，p = p->next：双指针同步后移"
+            if p
+            else "p 已走到 NULL，链里没有这个值",
+            ptr={"prev": prev, "p": p if p else "NULL"},
+        )
 
     if found is None:
         t.push(lst.head, 4, f"链表中不存在值为 {value} 的结点，删除失败")
@@ -470,14 +506,14 @@ def op_delete_value(lst, value: int) -> dict:
         lst.head = found.next
         t.ptr = {"prev": None, "p": found}
         t.aside = [found]
-        t.push(lst.head, 5, "prev 为空：删的是首元结点，head = p->next",
-               remove=[found.id])
+        t.push(
+            lst.head, 5, "prev 为空：删的是首元结点，head = p->next", remove=[found.id]
+        )
     else:
         prev.next = found.next
         t.ptr = {"prev": prev, "p": found}
         t.aside = [found]
-        t.push(lst.head, 6, "prev->next = p->next：摘链，p 离开主链",
-               remove=[found.id])
+        t.push(lst.head, 6, "prev->next = p->next：摘链，p 离开主链", remove=[found.id])
 
     t.ptr = {"p": None}
     t.aside = []
@@ -500,24 +536,33 @@ def op_search(lst, value: int) -> dict:
     while p is not None:
         t.compares += 1
         if p.value == value:
-            t.push(lst.head, 2,
-                   f"p->data == {value}：在第 {pos} 个结点找到，返回 {pos}",
-                   compare=[p.id])
-            t.push(lst.head, 2, f"查找成功：{value} 位于第 {pos} 个结点", compare=[p.id])
+            t.push(
+                lst.head,
+                2,
+                f"p->data == {value}：在第 {pos} 个结点找到，返回 {pos}",
+                compare=[p.id],
+            )
+            t.push(
+                lst.head, 2, f"查找成功：{value} 位于第 {pos} 个结点", compare=[p.id]
+            )
             out = _meta("search", lst.head)
             out["result"] = {"found": True, "pos": pos}
             out["trace"] = t.steps
             return out
         t._visited_ids.add(p.id)
-        t.push(lst.head, 2, f"第 {pos} 个结点是 {p.value} ≠ {value}，继续",
-               compare=[p.id])
+        t.push(
+            lst.head, 2, f"第 {pos} 个结点是 {p.value} ≠ {value}，继续", compare=[p.id]
+        )
         p = p.next
         pos += 1
         t.moves += 1
         t.ptr = {"p": p if p else "NULL"}
-        t.push(lst.head, 3,
-               f"p = p->next，走到第 {pos} 个" if p else "p = p->next，p 变成 NULL",
-               ptr={"p": p if p else "NULL"})
+        t.push(
+            lst.head,
+            3,
+            f"p = p->next，走到第 {pos} 个" if p else "p = p->next，p 变成 NULL",
+            ptr={"p": p if p else "NULL"},
+        )
 
     t.push(lst.head, 5, f"p 走到 NULL 仍未命中：返回 -1，链表中没有 {value}")
     out = _meta("search", lst.head)
@@ -537,14 +582,21 @@ def op_traverse(lst) -> dict:
     while p is not None:
         seen.append(p.value)
         t._visited_ids.add(p.id)
-        t.push(lst.head, 2, f"visit(p->data)：访问第 {len(seen)} 个结点，值 {p.value}",
-               compare=[p.id])
+        t.push(
+            lst.head,
+            2,
+            f"visit(p->data)：访问第 {len(seen)} 个结点，值 {p.value}",
+            compare=[p.id],
+        )
         p = p.next
         t.moves += 1
         t.ptr = {"p": p if p else "NULL"}
-        t.push(lst.head, 3,
-               f"p = p->next" if p else "p = p->next，p 为 NULL，遍历结束",
-               ptr={"p": p if p else "NULL"})
+        t.push(
+            lst.head,
+            3,
+            "p = p->next" if p else "p = p->next，p 为 NULL，遍历结束",
+            ptr={"p": p if p else "NULL"},
+        )
 
     if seen:
         done = "遍历完成：" + " → ".join(str(v) for v in seen) + " → NULL"
@@ -561,13 +613,25 @@ def op_traverse(lst) -> dict:
 # 会话里的链表容器 + 工具
 # ==========================================================================
 
+
 class TraceList:
-    """只带一个 head 指针的链表（轨迹由各 op_* 函数生成）"""
+    """只带一个 head 指针的链表（轨迹由各 op_* 函数生成）
+
+    注意：本类的 __init__ 会一次性 O(n) 建链；op_* 系列函数只操作 head，
+    length() 在 op_* 变更后需要重新遍历（教学演示上限 MAX_NODES=12，可接受）。
+    """
 
     def __init__(self, values=None):
-        self.head: Optional[Node] = None
-        for v in (values or []):
-            self._append_raw(v)
+        self.head: Node | None = None
+        if values:
+            tail: Node | None = None
+            for v in values:
+                node = Node(v)
+                if tail is None:
+                    self.head = node
+                else:
+                    tail.next = node
+                tail = node
 
     def _append_raw(self, value: int):
         node = Node(value)
@@ -589,6 +653,18 @@ class TraceList:
             p = p.next
         return n
 
+    def values(self) -> list:
+        """按逻辑顺序取出所有 value（供旧接口返回体使用）"""
+        out, p = [], self.head
+        while p:
+            out.append(p.value)
+            p = p.next
+        return out
+
+    def clear(self) -> None:
+        """清空链表（旧接口 DELETE /api/linkedlist 使用）"""
+        self.head = None
+
 
 def state_payload(lst: TraceList) -> dict:
     """无轨迹的当前状态（供前端对齐 / 快速自检）"""
@@ -601,7 +677,7 @@ def state_payload(lst: TraceList) -> dict:
     }
 
 
-def _pos_of(head: Optional[Node], target: Node) -> int:
+def _pos_of(head: Node | None, target: Node) -> int:
     i, p = 1, head
     while p:
         if p is target:

@@ -43,7 +43,7 @@
         'FastAPI 已连接 · ' + (b.base || location.origin) + ' · 题库 ' + total + ' 题'
       );
     } else {
-      setBadge('offline', '离线模式', '未连接到 ' + b.origin + '，使用本地内置数据');
+      setBadge('offline', '离线模式', '未连接到 ' + b.origin + '，请启动后端后重试');
     }
   }
 

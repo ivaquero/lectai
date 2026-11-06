@@ -44,8 +44,8 @@
         <a class="btn" href="quiz.html">去刷题</a>
       </div>
       <p class="hero-metrics">
-        <span><b id="m-quiz">32</b> 道题</span>
-        <span><b id="m-kb">21</b> 条知识库</span>
+        <span><b id="m-quiz">–</b> 道题</span>
+        <span><b id="m-kb">–</b> 条知识库</span>
         <span><b>7</b> 个链表操作</span>
         <span><b>0</b> 个外部依赖</span>
       </p>
@@ -120,8 +120,8 @@
     <a class="entry" href="quiz.html">
       <span class="entry-mark" aria-hidden="true">?</span>
       <h3>在线刷题</h3>
-      <p>链表、栈与队列、树、排序四类题库，提交即判，解析与记忆点一起给出。</p>
-      <div class="entry-tags"><span>4 类</span><span>即时判题</span><span>答题卡</span></div>
+      <p>覆盖线性表、栈队列、树、排序、图、查找六大板块，提交即判，解析与记忆点一起给出。</p>
+      <div class="entry-tags"><span id="m-cats">全部题库</span><span>即时判题</span><span>答题卡</span></div>
       <span class="entry-go">开始刷题</span>
     </a>
 
@@ -129,7 +129,7 @@
       <span class="entry-mark" aria-hidden="true">&#10022;</span>
       <h3>AI 答疑</h3>
       <p>命中本地知识库就直接回答，未命中转大模型；每条回答都标出知识来源。</p>
-      <div class="entry-tags"><span>local_kb</span><span>21 条</span><span>来源可查</span></div>
+      <div class="entry-tags"><span>local_kb</span><span id="m-kb-tag">高频考点</span><span>来源可查</span></div>
       <span class="entry-go">去提问</span>
     </a>
   </section>
@@ -193,6 +193,7 @@
 </footer>
 
 <script src="assets/js/core/dom.js"></script>
+<script src="assets/js/core/sanitize.js"></script>
 <script src="assets/js/core/toast.js"></script>
 <script src="assets/js/core/api.js"></script>
 <script src="assets/js/shell.js"></script>

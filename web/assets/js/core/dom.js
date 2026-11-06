@@ -34,7 +34,12 @@
         const v = attrs[k];
         if (v === null || v === undefined || v === false) return;
         if (k === 'text') node.textContent = v;
-        else if (k === 'html') node.innerHTML = v;
+        else if (k === 'html') {
+          // P-003 提醒：`html:` 是原生 innerHTML sink。调用方必须保证字符串
+          // 要么是自身硬编码的可信字面量，要么先经 DS.sanitize() 过滤；
+          // 从后端字段直接塞进来的场景请走 `text:` 或先确认 content_type。
+          node.innerHTML = v;
+        }
         else if (k === 'dataset') Object.assign(node.dataset, v);
         else if (k.slice(0, 2) === 'on' && typeof v === 'function') {
           node.addEventListener(k.slice(2).toLowerCase(), v);

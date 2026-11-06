@@ -64,7 +64,10 @@
   function addAnswer(data, ms) {
     const frag = [];
     if (data.title) frag.push(el('div.ans-title', { text: data.title }));
-    const body = el('div', { html: data.answer || '' });
+    // P-003：只有后端明确标 trusted_html 时才走 sanitize+innerHTML，其余一律 textContent。
+    const body = data.answer_content_type === 'trusted_html'
+      ? el('div', { html: DS.sanitize(data.answer || '') })
+      : el('div', { text: data.answer || '' });
     frag.push(body);
 
     const src = SRC_LABEL[data.source] || ['', data.source || 'unknown'];

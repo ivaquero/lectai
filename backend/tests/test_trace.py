@@ -1,17 +1,25 @@
-# -*- coding: utf-8 -*-
 """
 tests/test_trace.py —— 轨迹生成器的纯逻辑测试（无网络、无 FastAPI 依赖）
 运行：python tests/test_trace.py
 """
+
 import os
-import sys
 import random
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from algo.linkedlist_trace import (  # noqa: E402
-    TraceList, op_build, op_insert_head, op_insert_tail,
-    op_delete_pos, op_delete_value, op_search, op_traverse, OpError, MAX_NODES,
+from algo.linkedlist_trace import (
+    MAX_NODES,
+    OpError,
+    TraceList,
+    op_build,
+    op_delete_pos,
+    op_delete_value,
+    op_insert_head,
+    op_insert_tail,
+    op_search,
+    op_traverse,
 )
 
 PASS = 0
@@ -41,35 +49,31 @@ def validate_trace(res, lst):
         check(len(ids) == len(set(ids)), "主链无重复结点")
         aside_ids = [n["id"] for n in st["aside"]]
         check(not (set(ids) & set(aside_ids)), "aside 与主链不重叠")
-        check(st["nodes"][0]["id"] == st["head"] if st["nodes"] else st["head"] is None,
-              "head 指向主链第一个结点")
+        check(
+            st["nodes"][0]["id"] == st["head"] if st["nodes"] else st["head"] is None,
+            "head 指向主链第一个结点",
+        )
         for name, tgt in st["ptr"].items():
-            check(tgt is None or tgt == "NULL" or tgt in ids or tgt in aside_ids,
-                  f"指针 {name} 指向存在的结点 ({tgt})")
+            check(
+                tgt is None or tgt == "NULL" or tgt in ids or tgt in aside_ids,
+                f"指针 {name} 指向存在的结点 ({tgt})",
+            )
         for group in st["mark"].values():
             for i in group:
                 check(i in ids or i in aside_ids, "高亮 id 存在")
-        check(st["line"] is None or 0 <= st["line"] < nlines,
-              f"代码行号不越界 (line={st['line']})")
+        check(
+            st["line"] is None or 0 <= st["line"] < nlines,
+            f"代码行号不越界 (line={st['line']})",
+        )
         labels = [n["label"] for n in st["nodes"]]
-        check(labels == [f"a{i}" for i in range(1, len(labels) + 1)],
-              "位序标签 a1..an 连续")
+        check(
+            labels == [f"a{i}" for i in range(1, len(labels) + 1)],
+            "位序标签 a1..an 连续",
+        )
     check(res["length"] == lst.length(), "返回体 length 与链表一致")
-    check(res["trace"][-1]["nodes"] == lst.to_nodes_plus() if hasattr(lst, "to_nodes_plus")
-          else res["trace"][-1]["nodes"] == [
-              {"id": n["id"], "value": n["value"], "label": n["label"]}
-              for n in res["trace"][-1]["nodes"]],
-          "最后一步的快照等于链表现状")
-
-
-def to_nodes(lst):
-    return [{"id": n["id"], "value": n["value"], "label": n["label"]}
-            for n in (lambda p: (lambda: None)() or [])(None)]
-
-
-# 上面 to_nodes 写复杂了，直接用 TraceList.to_nodes
-def snap_of(lst):
-    return lst.to_nodes()
+    # P-009：旧版把 `A == 派生自 A 的推导式` 当等价检查，是永真式；
+    # 现在直接对比 TraceList.to_nodes() 快照，与随机压力段(见下方)保持一致。
+    check(res["trace"][-1]["nodes"] == lst.to_nodes(), "最后一步的快照等于链表现状")
 
 
 # --------------------------------------------------------------------------
@@ -91,7 +95,6 @@ def main():
     check(values(lst) == [7, 3, 1, 4, 1, 5], "头插后 head 是新结点")
     aside_steps = [s for s in res["trace"] if s["aside"]]
     check(len(aside_steps) >= 2, "新结点先出现在暂存区")
-    head_steps = [s for s in res["trace"] if s["head"] == res["trace"][-1]["head"]]
     check(res["trace"][-1]["nodes"][0]["value"] == 7, "最后一步新结点在链首")
     print("insert-head    OK")
 
@@ -110,8 +113,9 @@ def main():
     expect = before[:2] + before[3:]
     check(values(lst) == expect, "按位删除后序列正确")
     # 摘链那一刻：被删结点应出现在 aside 且带 remove 标记
-    unlink = [s for s in res["trace"] if any(
-        n["value"] == before[2] for n in s["aside"])]
+    unlink = [
+        s for s in res["trace"] if any(n["value"] == before[2] for n in s["aside"])
+    ]
     check(len(unlink) >= 1, "被删结点先离开主链进暂存区，再被释放")
     print("delete-pos     OK")
 
@@ -140,12 +144,15 @@ def main():
     op_build(lst3, [10, 20, 30])
     res = op_search(lst3, 20)
     check(res["result"] == {"found": True, "pos": 2}, "查找命中位序")
-    check(any(s["ptr"].get("p") == "NULL" for s in res["trace"]) is False,
-          "命中时 p 不应走到 NULL")
+    check(
+        any(s["ptr"].get("p") == "NULL" for s in res["trace"]) is False,
+        "命中时 p 不应走到 NULL",
+    )
     res = op_search(lst3, 99)
     check(res["result"] == {"found": False, "pos": -1}, "未命中返回 -1")
-    check(any(s["ptr"].get("p") == "NULL" for s in res["trace"]),
-          "未命中时 p 走到 NULL")
+    check(
+        any(s["ptr"].get("p") == "NULL" for s in res["trace"]), "未命中时 p 走到 NULL"
+    )
     validate_trace(res, lst3)
     print("search         OK")
 
@@ -194,14 +201,14 @@ def main():
                     continue
                 pos = random.randint(1, len(cur))
                 r = op_delete_pos(lst4, pos)
-                expect = cur[:pos - 1] + cur[pos:]
+                expect = cur[: pos - 1] + cur[pos:]
             elif op_kind == "dv":
                 if not cur:
                     continue
                 v = random.choice(cur)
                 r = op_delete_value(lst4, v)
                 i = cur.index(v)
-                expect = cur[:i] + cur[i + 1:]
+                expect = cur[:i] + cur[i + 1 :]
             elif op_kind == "sv":
                 r = op_search(lst4, random.randint(0, 99))
                 continue
@@ -211,8 +218,10 @@ def main():
         except OpError:
             continue
         # 最后一步的主链必须等于真实链表
-        check(r["trace"][-1]["nodes"] == lst4.to_nodes(),
-              f"随机 {op_kind} 后最后一步快照 == 真实链表")
+        check(
+            r["trace"][-1]["nodes"] == lst4.to_nodes(),
+            f"随机 {op_kind} 后最后一步快照 == 真实链表",
+        )
         check(values(lst4) == expect, f"随机 {op_kind} 值序列正确")
     print("random 60 ops  OK")
 

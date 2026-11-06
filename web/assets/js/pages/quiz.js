@@ -122,11 +122,21 @@
       const line = $('#verdict-line');
       line.className = 'verdict-line ' + (res.correct ? 'ok' : 'bad');
       line.textContent = res.correct ? '✓ 回答正确' : '✗ 回答错误，正确答案是 ' + res.letter;
-      $('#verdict-body').innerHTML = res.explanation || '';
+      // P-003：只有后端标 trusted_html 的字段才允许走 innerHTML（并先 sanitize）；
+      // 其余内容类型（plain_text / 未标）一律 textContent，防 XSS。
+      if (res.explanationContentType === 'trusted_html') {
+        $('#verdict-body').innerHTML = DS.sanitize(res.explanation || '');
+      } else {
+        $('#verdict-body').textContent = res.explanation || '';
+      }
       const kp = $('#keypoint');
       if (res.keyPoint) {
         kp.hidden = false;
-        $('#keypoint-text').innerHTML = res.keyPoint;
+        if (res.keyPointContentType === 'trusted_html') {
+          $('#keypoint-text').innerHTML = DS.sanitize(res.keyPoint);
+        } else {
+          $('#keypoint-text').textContent = res.keyPoint;
+        }
       } else kp.hidden = true;
     } else {
       v.classList.remove('show');
@@ -216,7 +226,9 @@
       answerIndex: d.answer_index,
       letter: d.answer_letter,
       explanation: d.explanation,
-      keyPoint: d.key_point
+      explanationContentType: d.explanation_content_type,
+      keyPoint: d.key_point,
+      keyPointContentType: d.key_point_content_type
     };
     renderQ();
     updateProgress();

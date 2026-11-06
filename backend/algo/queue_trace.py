@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 algo/queue_trace.py —— 循环队列「步骤轨迹」生成器
 ==========================================================================
@@ -23,11 +22,12 @@ algo/queue_trace.py —— 循环队列「步骤轨迹」生成器
 """
 
 import itertools
+from collections import deque
 
 from .stack_trace import OpError, SeqTracer
 
-MAX_ITEMS = 10          # 数组容量（含牺牲的一个单元，最多放 9 个）
-CAPACITY = MAX_ITEMS    # 数组长度
+MAX_ITEMS = 10  # 数组容量（含牺牲的一个单元，最多放 9 个）
+CAPACITY = MAX_ITEMS  # 数组长度
 
 
 class Item:
@@ -98,17 +98,21 @@ def _meta(op: str, n: int) -> dict:
         "title": meta["title"],
         "code": {"lines": meta["lines"], "structural": meta["structural"]},
         "length": n,
-        "max_nodes": MAX_ITEMS - 1,   # 牺牲一个单元，实际最多放 9 个
+        "max_nodes": MAX_ITEMS - 1,  # 牺牲一个单元，实际最多放 9 个
         "trace": None,
     }
 
 
 class TraceQueue:
-    """循环队列：items[0] 是队头，items[-1] 是队尾"""
+    """循环队列：items[0] 是队头，items[-1] 是队尾
+
+    底层用 collections.deque：append / popleft 均 O(1)，避免 list.pop(0) 的
+    O(n) 前删。SeqTracer._flat(items) 只做一次顺序遍历，两种容器无差异。
+    """
 
     def __init__(self, values=None):
-        self.items: list = []
-        for v in (values or []):
+        self.items: deque = deque()
+        for v in values or []:
             self.items.append(Item(v))
 
     def front(self):
@@ -142,14 +146,19 @@ class TraceQueue:
 # 操作
 # ==========================================================================
 
+
 def op_build(q: TraceQueue, values: list) -> dict:
     if len(values) > CAPACITY - 1:
         raise OpError(f"最多支持 {CAPACITY - 1} 个元素，收到 {len(values)} 个")
 
     t = SeqTracer()
-    q.items = []
+    q.items = deque()
     t.ptr = {"front": "NULL", "rear": "NULL", "x": None}
-    t.push(q.items, 0, f"初始化：Q.front = Q.rear = 0，空队（容量 {CAPACITY}，牺牲一个单元）")
+    t.push(
+        q.items,
+        0,
+        f"初始化：Q.front = Q.rear = 0，空队（容量 {CAPACITY}，牺牲一个单元）",
+    )
 
     for x in values:
         item = Item(x)
@@ -161,7 +170,9 @@ def op_build(q: TraceQueue, values: list) -> dict:
         t.ptr = {"front": q.front(), "rear": item, "x": None}
         t.push(q.items, 2, f"Q.data[Q.rear] = {x}：写入队尾", compare=[item.id])
         t.aside = []
-        t.push(q.items, 3, f"Q.rear = (Q.rear + 1) % {CAPACITY}；当前队列：{q.values()}")
+        t.push(
+            q.items, 3, f"Q.rear = (Q.rear + 1) % {CAPACITY}；当前队列：{q.values()}"
+        )
 
     out = _meta("build", q.length())
     out["result"] = {"values": q.values()}
@@ -172,7 +183,9 @@ def op_build(q: TraceQueue, values: list) -> dict:
 
 def op_enqueue(q: TraceQueue, value: int) -> dict:
     if q.length() >= CAPACITY - 1:
-        raise OpError(f"队满：循环队列最多放 {CAPACITY - 1} 个元素（容量 {CAPACITY}，牺牲一个单元）")
+        raise OpError(
+            f"队满：循环队列最多放 {CAPACITY - 1} 个元素（容量 {CAPACITY}，牺牲一个单元）"
+        )
 
     t = SeqTracer()
     item = Item(value)
@@ -181,9 +194,12 @@ def op_enqueue(q: TraceQueue, value: int) -> dict:
     t.ptr = {"front": q.front(), "rear": q.rear(), "x": item}
     t.push(q.items, 0, f"准备入队：x = {value}", aside=[item])
     t.compares += 1
-    t.push(q.items, 0,
-           f"检查队满：(rear+1) % {CAPACITY} != front，可入队（已用 {q.length()}/{CAPACITY - 1}）",
-           compare=[item.id])
+    t.push(
+        q.items,
+        0,
+        f"检查队满：(rear+1) % {CAPACITY} != front，可入队（已用 {q.length()}/{CAPACITY - 1}）",
+        compare=[item.id],
+    )
 
     # ① 写入队尾
     q.items.append(item)
@@ -194,8 +210,12 @@ def op_enqueue(q: TraceQueue, value: int) -> dict:
     t.moves += 1
     t.aside = []
     t.ptr = {"front": q.front(), "rear": item, "x": None}
-    t.push(q.items, 2, f"Q.rear = (Q.rear + 1) % {CAPACITY}：队尾指针后移一格",
-           compare=[item.id])
+    t.push(
+        q.items,
+        2,
+        f"Q.rear = (Q.rear + 1) % {CAPACITY}：队尾指针后移一格",
+        compare=[item.id],
+    )
     t.push(q.items, 3, f"入队完成，当前队列：{q.values()}（左端为队头）")
 
     out = _meta("enqueue", q.length())
@@ -218,23 +238,36 @@ def op_dequeue(q: TraceQueue) -> dict:
 
     # ① 取队头
     t.ptr = {"front": head, "rear": q.rear(), "x": head}
-    t.push(q.items, 1, f"x = Q.data[Q.front]：取到队头元素 {head.value}",
-           remove=[head.id])
+    t.push(
+        q.items, 1, f"x = Q.data[Q.front]：取到队头元素 {head.value}", remove=[head.id]
+    )
 
     # ② front 后移
-    q.items.pop(0)
+    q.items.popleft()
     t.moves += 1
     new_head = q.front()
-    t.ptr = {"front": new_head if new_head else "NULL",
-             "rear": q.rear() if q.rear() else "NULL", "x": head}
-    t.push(q.items, 2,
-           f"Q.front = (Q.front + 1) % {CAPACITY}：" +
-           ("队已空，front = rear" if new_head is None else f"新队头为 {new_head.value}"),
-           aside=[head], remove=[head.id])
+    t.ptr = {
+        "front": new_head if new_head else "NULL",
+        "rear": q.rear() if q.rear() else "NULL",
+        "x": head,
+    }
+    t.push(
+        q.items,
+        2,
+        f"Q.front = (Q.front + 1) % {CAPACITY}："
+        + (
+            "队已空，front = rear" if new_head is None else f"新队头为 {new_head.value}"
+        ),
+        aside=[head],
+        remove=[head.id],
+    )
 
     t.aside = []
-    t.ptr = {"front": new_head if new_head else "NULL",
-             "rear": q.rear() if q.rear() else "NULL", "x": None}
+    t.ptr = {
+        "front": new_head if new_head else "NULL",
+        "rear": q.rear() if q.rear() else "NULL",
+        "x": None,
+    }
     t.push(q.items, 3, f"出队完成，返回 {head.value}；当前队列：{q.values()}")
 
     out = _meta("dequeue", q.length())
@@ -253,8 +286,12 @@ def op_peek(q: TraceQueue) -> dict:
     t.ptr = {"front": head, "rear": q.rear(), "x": None}
     t.push(q.items, 0, "检查队空：front != rear，队非空", compare=[head.id])
     t.compares += 1
-    t.push(q.items, 1, f"return Q.data[Q.front]：队头是 {head.value}；front 不动",
-           compare=[head.id])
+    t.push(
+        q.items,
+        1,
+        f"return Q.data[Q.front]：队头是 {head.value}；front 不动",
+        compare=[head.id],
+    )
 
     out = _meta("peek", q.length())
     out["result"] = {"value": head.value}
@@ -285,8 +322,9 @@ def op_traverse(q: TraceQueue) -> dict:
         t.push(q.items, 1, f"visit(Q.data[{i}])：访问到 {it.value}", compare=[it.id])
 
     t.ptr = {"front": q.front(), "rear": q.rear(), "x": None}
-    t.push(q.items, None,
-           f"遍历完成（队头 → 队尾）：{' → '.join(str(v) for v in seen)}")
+    t.push(
+        q.items, None, f"遍历完成（队头 → 队尾）：{' → '.join(str(v) for v in seen)}"
+    )
     out = _meta("traverse", q.length())
     out["result"] = {"values": seen}
     out["trace"] = t.steps

@@ -28,28 +28,61 @@
     base: API_BASE
   });
 
-  /** 会话 id：同一标签页固定，用于后端隔离数据 */
+  /**
+   * 会话 id：同一标签页固定，用于后端隔离数据。
+   * P-012：优先 crypto.randomUUID()（36 位 UUIDv4，浏览器环境安全随机），
+   * 兜底链：crypto.getRandomValues → Math.random（老浏览器 / file:// 环境）。
+   * 后端 core/session.py:sid 正则要求 ^[A-Za-z0-9_\-]{1,64}$，所以去掉破折号也可，
+   * 但保留破折号更贴近 UUID 惯例；后端会原样接受。
+   */
+  function newSessionId() {
+    const c = (typeof crypto !== 'undefined') ? crypto : null;
+    if (c && typeof c.randomUUID === 'function') {
+      try { return 'web-' + c.randomUUID(); } catch (e) { /* 继续兜底 */ }
+    }
+    if (c && typeof c.getRandomValues === 'function') {
+      try {
+        const b = new Uint8Array(16);
+        c.getRandomValues(b);
+        // 标 version 4 + variant，方便肉眼识别
+        b[6] = (b[6] & 0x0f) | 0x40;
+        b[8] = (b[8] & 0x3f) | 0x80;
+        const hex = Array.prototype.map.call(b, (x) => x.toString(16).padStart(2, '0')).join('');
+        return 'web-' + hex;
+      } catch (e) { /* 继续兜底 */ }
+    }
+    // 最终兜底：32 位 Math.random 十六进制（熵较低但格式合法，且仅用于会话隔离，
+    // 后端已把 sid 视为不可信输入并加正则校验）
+    let s = '';
+    while (s.length < 32) s += Math.random().toString(16).slice(2);
+    return 'web-' + s.slice(0, 32);
+  }
+
   function sessionId() {
-    let sid = sessionStorage.getItem('ds-session-id');
+    let sid;
+    try { sid = sessionStorage.getItem('ds-session-id'); } catch (e) { sid = null; }
     if (!sid) {
-      sid = 'web-' + Math.random().toString(36).slice(2, 10);
-      sessionStorage.setItem('ds-session-id', sid);
+      sid = newSessionId();
+      try { sessionStorage.setItem('ds-session-id', sid); } catch (e) { /* 隐私模式忽略 */ }
     }
     return sid;
   }
 
   /**
    * 统一请求
-   * @returns {Promise<{ok:boolean, data:any, msg:string, offline?:boolean}>}
+   * @returns {Promise<{ok:boolean, data:any, msg:string, offline?:boolean, kind?:string}>}
    *   业务错误（栈空、越界）返回 ok:false 且 offline 为空
-   *   网络失败返回 ok:false, offline:true
+   *   网络/超时/HTTP 错误返回 ok:false, offline:true 并附 kind:
+   *     'timeout' | 'network' | 'http-4xx' | 'http-5xx' | 'parse' | 'unknown'
    */
   async function request(path, opt) {
     const o = opt || {};
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), o.timeout || 8000);
+    let timedOut = false;
+    const timer = setTimeout(() => { timedOut = true; ctrl.abort(); }, o.timeout || 8000);
+    let res;
     try {
-      const res = await fetch(API_BASE + path, {
+      res = await fetch(API_BASE + path, {
         method: o.method || 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -58,17 +91,46 @@
         body: o.body === undefined || o.body === null ? undefined : JSON.stringify(o.body),
         signal: ctrl.signal
       });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const json = await res.json();
-      backend.online = true;
-      if (json.code !== 0) return { ok: false, data: null, msg: json.msg || '操作失败' };
-      return { ok: true, data: json.data, msg: json.msg || 'ok' };
-    } catch (err) {
-      backend.online = false;
-      return { ok: false, data: null, msg: '后端未连接', offline: true };
-    } finally {
+    } catch (e) {
       clearTimeout(timer);
+      backend.online = false;
+      if (timedOut) {
+        return { ok: false, data: null, msg: '请求超时，请稍后重试', offline: true, kind: 'timeout' };
+      }
+      // fetch 抛错基本只剩 TypeError('Failed to fetch')——网络不可达 / CORS 阻断
+      return { ok: false, data: null, msg: '后端未连接', offline: true, kind: 'network' };
     }
+    clearTimeout(timer);
+
+    if (!res.ok) {
+      // 4xx/5xx 区分开：4xx 通常是我方请求有问题，不该判定后端离线
+      const kind = res.status >= 500 ? 'http-5xx' : 'http-4xx';
+      if (res.status >= 500) backend.online = false;
+      // 尽量解析后端 err(msg) 结构，回退到 HTTP 状态描述
+      let msg = 'HTTP ' + res.status;
+      try {
+        const j = await res.json();
+        if (j && j.msg) msg = j.msg;
+      } catch (e) { /* 忽略非 JSON 响应 */ }
+      return {
+        ok: false,
+        data: null,
+        msg,
+        offline: res.status >= 500,
+        kind
+      };
+    }
+
+    let json;
+    try {
+      json = await res.json();
+    } catch (e) {
+      backend.online = false;
+      return { ok: false, data: null, msg: '后端响应非 JSON', offline: true, kind: 'parse' };
+    }
+    backend.online = true;
+    if (json.code !== 0) return { ok: false, data: null, msg: json.msg || '操作失败' };
+    return { ok: true, data: json.data, msg: json.msg || 'ok' };
   }
 
   DS.api = {
