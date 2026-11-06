@@ -94,20 +94,36 @@ async function main() {
   }
 
   /* ------------------------------ 刷题页 ------------------------------ */
-  section('刷题页 · 离线降级');
+  section('刷题页 · 离线自动降级（本地判题）');
   {
     const { doc, dom } = await open('quiz.html');
-    const got = await waitFor(() => doc.querySelector('#offline-banner'));
-    ok(!!got, '顶部出现离线横幅');
-    const opts = doc.querySelector('#opts');
-    ok(opts && opts.textContent.indexOf('uvicorn') >= 0, '题目区给出启动命令');
-    ok(doc.querySelector('#btn-submit').disabled === true, '「提交答案」被禁用');
-    ok(doc.querySelector('#btn-next').disabled === true, '「下一题」被禁用');
+    await waitFor(() => doc.querySelector('#offline-banner'));
+    const banner = doc.querySelector('#offline-banner');
+    ok(/离线模式已启用/.test(banner.textContent), '横幅切到「离线模式已启用」（信息态）');
+    ok(/uvicorn/.test(banner.textContent), '横幅仍给出后端启动命令');
+
+    // 分类与题目应由本地快照渲染出来
+    const loaded = await waitFor(() => doc.querySelectorAll('#cat-tabs .tab').length >= 6);
+    ok(loaded, '离线加载出全部分类标签（本地快照）');
+    await waitFor(() => doc.querySelectorAll('#opts .opt').length === 4);
+    ok(doc.querySelectorAll('#opts .opt').length === 4, '首题四个选项渲染成功');
+    ok(doc.querySelector('#opts').textContent.indexOf('uvicorn') === -1,
+      '题目区不再显示「需要后端」的降级说明（已走本地数据）');
+    const diffEl = doc.querySelector('#q-diff');
+    ok(!!diffEl && diffEl.hidden === false, '难度徽标可见');
+
+    // 离线判题：点一个选项 → 提交 → 就地展开解析
+    doc.querySelector('#opts .opt').click();       // 选 A
+    ok(doc.querySelector('#btn-submit').disabled === false, '选中后「提交答案」可点');
+    doc.querySelector('#btn-submit').click();
+    await waitFor(() => doc.querySelector('#verdict').classList.contains('show'));
+    ok(doc.querySelector('#verdict').classList.contains('show'), '离线提交后展开解析');
+    ok(doc.querySelector('#verdict-line').textContent.length > 0, '判题结论行有文字');
     dom.window.close();
   }
 
   /* ------------------------------ 答疑页 ------------------------------ */
-  section('答疑页 · 离线降级');
+  section('答疑页 · 离线命中本地知识库');
   {
     const { doc, win, dom } = await open('ai.html');
     await waitFor(() => doc.querySelector('#offline-banner'));
@@ -116,12 +132,12 @@ async function main() {
     input.value = 'KMP 的 next 数组怎么求？';
     doc.querySelector('#btn-ask').click();
 
-    const answered = await waitFor(() => !!doc.querySelector('#msgs .note.danger'), 8000);
-    ok(answered, '离线时提问仍会收到一条回复（不会卡住）');
-    const note = doc.querySelector('#msgs .note.danger');
-    const tail = note ? note.textContent : '';
-    ok(tail.indexOf('后端未连接') >= 0 && tail.indexOf('uvicorn') >= 0,
-      '回复里说明了后端未连接并给出启动命令');
+    const answered = await waitFor(() => doc.querySelector('#msgs .ans-title'), 8000);
+    ok(!!answered, '离线提问返回本地知识库答案（带标题气泡）');
+    ok(!doc.querySelector('#msgs .note.danger'), '离线不再报「后端未连接」红框');
+    const badges = Array.from(doc.querySelectorAll('#msgs .src .badge')).map((b) => b.textContent);
+    ok(badges.some((t) => /local_kb/.test(t)), '答案标注 local_kb 来源');
+    ok(badges.some((t) => /离线模式/.test(t)), '额外标注离线模式');
     ok(!!doc.querySelector('#msgs').getAttribute('aria-live'), '消息区 aria-live 可播报');
     win.close();
     dom.window.close();

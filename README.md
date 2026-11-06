@@ -7,9 +7,8 @@
 ## 快速开始
 
 ```bash
-# 装 uv（只需一次）：Windows → powershell -c "irm https://astral.sh/uv/install.ps1|iex"；类 Unix → curl -LsSf https://astral.sh/uv/install.sh|sh
 cd backend
-uv sync                                    # 建 .venv，按 uv.lock 装 fastapi/uvicorn/pydantic
+uv sync
 uv run uvicorn main:app --reload --port 8000
 ```
 
@@ -22,7 +21,7 @@ uv run python tests/test_stackqueue_trace.py  # 栈 / 队列轨迹：10599 项�
 uv run python test_api.py                     # 接口端到端：30 项（需先起服务）
 node web/tests/list-page.test.js              # 前端集成（需 jsdom + 后端已启动）
 node web/tests/quiz-ai.test.js                # 刷题 + 答疑页（需后端已启动）
-node web/tests/offline.test.js                # 离线提示 + 无障碍（不需后端）
+node web/tests/offline.test.js                # 离线自动降级(本地判题/答疑)+无障碍（需后端托管静态，测试内 fetch 被置为失败）
 ```
 
 ## 目录结构
@@ -37,12 +36,16 @@ lectai/
 │   ├── core/response.py        ok/err 唯一定义点 {code,msg,data}
 │   ├── data/questions.json     题库(6 类 112，每题带 diff 难度标签)
 │   ├── data/kb.json            答疑本地知识库(21 条)
+│   ├── tools/build_questions.py    分章题合并成主库
+│   ├── tools/gen_offline_data.py   生成前端离线快照(改数据后重跑)
 │   └── pyproject.toml / uv.lock    uv 项目定义 + 锁文件
 └── web/                        静态前端（原生 HTML/CSS/JS，无构建）
     ├── *.html                  首页 / 单链表 / 刷题 / 答疑
     ├── assets/css/tokens.css        换配色只动这个
     └── assets/js/
-        ├── core/api.js         后端地址 API_ORIGIN 单点 + fetch 封装
+        ├── core/api.js         后端地址 API_ORIGIN 单点 + fetch 封装 + 自动降级
+        ├── core/offline-data.js 本地快照(题含答案/知识库/统计，自动生成勿手改)
+        ├── core/offline.js     离线应答器：复刻 quiz/ai/health 契约
         ├── core/sanitize.js    后端富文本白名单清洗
         ├── core/trace.js       轨迹播放器（游标单步 / 回退）
         └── pages/list/ops.js   新增链表操作只动这个（tabs 自动生成）
@@ -52,7 +55,8 @@ lectai/
 
 三句话：**算法只有一份**（`algo/*_trace.py`），每个 `op_*()` 返回**整条步骤轨迹**而非最终状态；**前端是纯播放器**（游标前后移动 = 单步 / 回退，无需逆操作）；**会话按 `X-Session-Id` 隔离**，链表 / 栈 / 队列 / 刷题统计共用一个 store。
 
-- **不做离线降级**：后端未连接时前端明确挂横幅、禁用按钮，不假装用本地数据判题——静默降级只会让 bug 更隐蔽。
+- **自动离线降级（题库 / 答疑 / 首页统计）**：后端不可达时，`core/api.js` 的 `probe()`/`request()` 自动切到本地快照 `core/offline-data.js`（由 `backend/tools/gen_offline_data.py` 从 `data/questions.json`+`data/kb.json` 生成），经 `core/offline.js` 复刻与线上完全同形的 `/api/health`、`/api/quiz/*`、`/api/ai/ask` 应答——取题、判题、解析、答疑、首页指标均可离线使用，页面顶部挂「离线模式已启用」信息横幅并保留启动命令与重试。**线上取题接口依旧不返回答案**（答案只存在于离线段，供本地测试），防作弊原则不变。
+- **可视化不做离线**：链表 / 栈 / 队列的逐步轨迹依赖后端 `algo/*_trace.py`，刻意不在前端复制一份算法（否则违背「算法只有一份」）；断后端时这三页仍显示「需要后端」并禁用执行按钮。
 - **不做前端算法**：加一个操作只改 `algo/*.py` + `pages/list/ops.js` 两处，杜绝前后端两份实现互相漂移。
 - **富文本白名单**：`/api/ai/ask`、`/api/quiz/submit` 的 HTML 字段带 `*_content_type`（`trusted_html` / `plain_text`）；只有 `trusted_html` 才经 `DS.sanitize()`（DOMParser + 标签 / 属性 / URL 协议白名单）后走 `innerHTML`，其余一律 `textContent`。
 - **安全**：CORS 走 `ALLOWED_ORIGINS` 白名单且 `allow_credentials=False`；sid 校验 `^[A-Za-z0-9_-]{1,64}$`（非法归 `default`）；会话 TTL 3600s + LRU 上限 10000（`LECTAI_SESSION_TTL/MAX` 可覆盖）。
@@ -79,14 +83,14 @@ lectai/
 
 其余 REST 接口：
 
-| 路径 | 说明 |
-| :--- | :--- |
-| GET /api/health | `quiz_total` / `quiz_categories` / `kb_entries` / `sessions` / `session_policy` / `data_ok` |
-| /api/linkedlist | GET 查询 · POST insert-head / insert-tail / delete / delete-value / search / reset · DELETE 清空 |
-| /api/stack · /api/queue | GET 查询 · POST push/enqueue、pop/dequeue、reset · GET peek · DELETE 清空 |
-| GET /api/quiz/categories · /api/quiz/questions?category=list · /api/quiz/stats | 分类 / 取题（不含答案解析） / 会话正确率 |
-| POST /api/quiz/submit | `{question_id,answer}` → 判题 + 解析 + 记忆点（带 `*_content_type`） |
-| POST /api/ai/ask | `{question}` → `{answer,source,answer_content_type}` |
+| 路径                                                                           | 说明                                                                                             |
+| :----------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------- |
+| GET /api/health                                                                | `quiz_total` / `quiz_categories` / `kb_entries` / `sessions` / `session_policy` / `data_ok`      |
+| /api/linkedlist                                                                | GET 查询 · POST insert-head / insert-tail / delete / delete-value / search / reset · DELETE 清空 |
+| /api/stack · /api/queue                                                        | GET 查询 · POST push/enqueue、pop/dequeue、reset · GET peek · DELETE 清空                        |
+| GET /api/quiz/categories · /api/quiz/questions?category=list · /api/quiz/stats | 分类 / 取题（不含答案解析） / 会话正确率                                                         |
+| POST /api/quiz/submit                                                          | `{question_id,answer}` → 判题 + 解析 + 记忆点（带 `*_content_type`）                             |
+| POST /api/ai/ask                                                               | `{question}` → `{answer,source,answer_content_type}`                                             |
 
 > `/reset` 兼容层保留，但新版可视化页改用 `/trace/state` 做首屏对齐。前端所有请求集中在 `web/assets/js/core/api.js` 的 `API_ORIGIN`（默认 `http://127.0.0.1:8000`），改后端地址只动这一处。
 
