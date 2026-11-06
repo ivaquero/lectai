@@ -121,6 +121,11 @@ class Tracer:
             self.ptr.update(ptr)
         if aside is not None:
             self.aside = list(aside)
+        # head 指针是链表的基本参照物：每一步都必须画出，且始终等于本步实际传入的
+        # head 结点。很多 op_* 用 `t.ptr = {...}` 直接替换整个粘性字典，会把之前
+        # 记下的 "head" 键冲掉（如头插讲解「head 还指着旧首元结点」那步箭头就消失）。
+        # 这里统一以入参 head 为准写回，保证 head 箭头永不丢、且永远指向当前真值。
+        self.ptr["head"] = head
 
         snap = {
             "seq": len(self.steps),
@@ -272,7 +277,7 @@ def op_build(lst, values: list) -> dict:
     t.ptr = {"head": None}
     t.push(None, 0, "从空表开始：head = NULL")
 
-    tail = None
+    tail: Node | None = None
     for x in values:
         s = Node(x)
         t._new_ids.add(s.id)
@@ -280,7 +285,7 @@ def op_build(lst, values: list) -> dict:
         t.ptr = {"s": s}
         t.push(lst.head, 1, f"申请新结点 s，写入数据 {x}，next 置为 NULL")
 
-        if lst.head is None:
+        if tail is None:
             lst.head = s
             t.aside = []
             t.ptr = {"head": s, "s": None}

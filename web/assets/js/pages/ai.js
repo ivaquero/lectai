@@ -71,10 +71,12 @@
     frag.push(body);
 
     const src = SRC_LABEL[data.source] || ['', data.source || 'unknown'];
-    frag.push(el('div.src', {}, [
+    const badges = [
       el('span.badge.' + src[0], { text: src[1] }),
       el('span.badge', { text: ms + ' ms' })
-    ]));
+    ];
+    if (data.offline) badges.push(el('span.badge.info', { text: '离线模式 · 本地知识库' }));
+    frag.push(el('div.src', {}, badges));
 
     const b = addMsg('ai', el('div', {}, frag));
     if (data.model) {

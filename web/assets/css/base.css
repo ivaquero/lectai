@@ -136,6 +136,16 @@ code {
   padding: 4px 12px;
 }
 
+/* 离线模式可用（本地快照接管刷题/答疑）：信息态，蓝色而非告警琥珀 */
+.offline-banner.info {
+  background: var(--accent-soft, #eff6ff);
+  border-color: var(--accent-line, #bfdbfe);
+}
+
+.offline-banner.info b {
+  color: var(--accent-strong, #1d4ed8);
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

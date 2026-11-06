@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 algo/stack_trace.py —— 顺序栈「步骤轨迹」生成器
 ==========================================================================
@@ -47,8 +46,8 @@ class OpError(Exception):
 # SeqTracer —— 顺序结构（栈 / 队列）通用的轨迹记录器
 # ==========================================================================
 
-class SeqTracer:
 
+class SeqTracer:
     def __init__(self):
         self.steps: list = []
         self.visited = 0
@@ -91,7 +90,9 @@ class SeqTracer:
             "remove": keep(set(remove or ())),
         }
 
-    def push(self, items, line, info, compare=(), remove=(), ptr=None, aside=None) -> dict:
+    def push(
+        self, items, line, info, compare=(), remove=(), ptr=None, aside=None
+    ) -> dict:
         if ptr is not None:
             self.ptr.update({k: v for k, v in ptr.items()})
         if aside is not None:
@@ -184,12 +185,13 @@ def _meta(op: str, n: int) -> dict:
 # 容器
 # ==========================================================================
 
+
 class TraceStack:
     """顺序栈：items[0] 是栈底，items[-1] 是栈顶"""
 
     def __init__(self, values=None):
         self.items: list = []
-        for v in (values or []):
+        for v in values or []:
             self.items.append(Item(v))
 
     def top(self):
@@ -209,6 +211,7 @@ class TraceStack:
 # 操作：每个函数跑完算法并返回 {meta + trace}
 # ==========================================================================
 
+
 def op_build(st: TraceStack, values: list) -> dict:
     if len(values) > MAX_ITEMS:
         raise OpError(f"最多支持 {MAX_ITEMS} 个元素，收到 {len(values)} 个")
@@ -224,16 +227,23 @@ def op_build(st: TraceStack, values: list) -> dict:
         t.ptr = {"x": item}
         t.push(st.items, 1, f"准备入栈：x = {x}", aside=[item])
         t.compares += 1
-        t.push(st.items, 2, f"栈未满（top = {len(st.items) - 1}，容量 {MAX_ITEMS}）",
-               compare=[item.id])
+        t.push(
+            st.items,
+            2,
+            f"栈未满（top = {len(st.items) - 1}，容量 {MAX_ITEMS}）",
+            compare=[item.id],
+        )
         st.items.append(item)
         t.moves += 1
         t.ptr = {"top": item, "x": None}
-        t.push(st.items, 3, f"S.data[++S.top] = {x}：{x} 成为新栈顶",
-               compare=[item.id])
+        t.push(st.items, 3, f"S.data[++S.top] = {x}：{x} 成为新栈顶", compare=[item.id])
         t.aside = []
-        t.push(st.items, 3, f"入栈完成，当前栈：{st.values()}（右端为栈顶）",
-               ptr={"x": None})
+        t.push(
+            st.items,
+            3,
+            f"入栈完成，当前栈：{st.values()}（右端为栈顶）",
+            ptr={"x": None},
+        )
 
     out = _meta("build", st.length())
     out["result"] = {"values": st.values()}
@@ -252,8 +262,12 @@ def op_push(st: TraceStack, value: int) -> dict:
     t.ptr = {"top": st.top(), "x": item}
     t.push(st.items, 0, f"准备入栈：x = {value}", aside=[item])
     t.compares += 1
-    t.push(st.items, 0, f"检查栈满：top = {st.length() - 1} < {MAX_ITEMS - 1}，未满",
-           compare=[item.id])
+    t.push(
+        st.items,
+        0,
+        f"检查栈满：top = {st.length() - 1} < {MAX_ITEMS - 1}，未满",
+        compare=[item.id],
+    )
 
     # ① 指针上移
     t.moves += 1
@@ -263,8 +277,7 @@ def op_push(st: TraceStack, value: int) -> dict:
     # ② 写入
     st.items.append(item)
     t.ptr = {"top": item, "x": None}
-    t.push(st.items, 2, f"S.data[S.top] = {value}：写入新栈顶",
-           compare=[item.id])
+    t.push(st.items, 2, f"S.data[S.top] = {value}：写入新栈顶", compare=[item.id])
     t.aside = []
     t.push(st.items, 3, f"入栈完成，当前栈：{st.values()}（右端为栈顶）")
 
@@ -287,16 +300,20 @@ def op_pop(st: TraceStack) -> dict:
 
     # ① 取出
     t.ptr = {"top": top, "x": top}
-    t.push(st.items, 1, f"x = S.data[S.top]：取到栈顶元素 {top.value}",
-           remove=[top.id])
+    t.push(st.items, 1, f"x = S.data[S.top]：取到栈顶元素 {top.value}", remove=[top.id])
 
     # ② 指针下移（元素仍在数组里，但已不在栈内 —— 这是"假删除"）
     st.items.pop()
     t.moves += 1
     new_top = st.top()
     t.ptr = {"top": new_top if new_top else "NULL", "x": top}
-    t.push(st.items, 2, f"S.top--：{'栈已空，top = -1' if new_top is None else f'新栈顶为 {new_top.value}'}",
-           aside=[top], remove=[top.id])
+    t.push(
+        st.items,
+        2,
+        f"S.top--：{'栈已空，top = -1' if new_top is None else f'新栈顶为 {new_top.value}'}",
+        aside=[top],
+        remove=[top.id],
+    )
 
     t.aside = []
     t.ptr = {"top": new_top if new_top else "NULL", "x": None}
@@ -317,8 +334,12 @@ def op_peek(st: TraceStack) -> dict:
     t.ptr = {"top": top, "x": None}
     t.push(st.items, 0, "检查栈空：top != -1，栈非空", compare=[top.id])
     t.compares += 1
-    t.push(st.items, 1, f"return S.data[S.top]：栈顶是 {top.value}；top 指针不动",
-           compare=[top.id])
+    t.push(
+        st.items,
+        1,
+        f"return S.data[S.top]：栈顶是 {top.value}；top 指针不动",
+        compare=[top.id],
+    )
 
     out = _meta("peek", st.length())
     out["result"] = {"value": top.value}
@@ -342,16 +363,20 @@ def op_traverse(st: TraceStack) -> dict:
         t.visited += 1
         t._visited_ids.add(it.id)
         t.ptr = {"top": st.top(), "x": it}
-        t.push(st.items, 0, f"i = {i}：从栈顶往栈底数第 {len(seen) + 1} 个",
-               compare=[it.id])
+        t.push(
+            st.items,
+            0,
+            f"i = {i}：从栈顶往栈底数第 {len(seen) + 1} 个",
+            compare=[it.id],
+        )
         seen.append(it.value)
         t.moves += 1
-        t.push(st.items, 1, f"visit(S.data[{i}])：访问到 {it.value}",
-               compare=[it.id])
+        t.push(st.items, 1, f"visit(S.data[{i}])：访问到 {it.value}", compare=[it.id])
 
     t.ptr = {"top": st.top(), "x": None}
-    t.push(st.items, None,
-           f"遍历完成（栈顶 → 栈底）：{' → '.join(str(v) for v in seen)}")
+    t.push(
+        st.items, None, f"遍历完成（栈顶 → 栈底）：{' → '.join(str(v) for v in seen)}"
+    )
 
     out = _meta("traverse", st.length())
     out["result"] = {"values": seen}

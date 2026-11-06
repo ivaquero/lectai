@@ -1,8 +1,10 @@
 /* ==========================================================================
-   pages/quiz.js —— 在线刷题页
+   pages/quiz.js —— 刷题页
    --------------------------------------------------------------------------
-   题目、判题、统计全部走后端；前端不持有答案（取题接口不返回 ans/exp）。
-   后端离线时题目区给出明确提示，不静默失败。
+   在线：取题不返回答案（防作弊），判题/解析走后端 /api/quiz/submit。
+   离线：api.js 自动降级到 core/offline-data.js 本地快照，取题/判题/解析/统计
+        全部本地完成（答案只存在于离线段，联网时不掺答案，防作弊原则不变）。
+        后端彻底不可达且无离线快照时，才给出明确提示、不静默失败。
    ========================================================================== */
 (function () {
   'use strict';
@@ -13,6 +15,13 @@
   const el = DS.el;
 
   const LETTERS = ['A', 'B', 'C', 'D'];
+
+  // 后端 difficulty 值 → 中文标签 + 配色类（q-diff--*）
+  const DIFF = {
+    basic: { label: '基础', cls: 'q-diff--basic' },
+    mid: { label: '中等', cls: 'q-diff--mid' },
+    hard: { label: '挑战', cls: 'q-diff--hard' }
+  };
 
   const state = {
     cats: [],
@@ -86,6 +95,17 @@
     const tag = $('#q-tag');
     if (q && q.tag) { tag.textContent = q.tag; tag.hidden = false; }
     else tag.hidden = true;
+
+    const diff = $('#q-diff');
+    const dinfo = q && DIFF[q.difficulty];
+    if (dinfo) {
+      diff.textContent = dinfo.label;
+      diff.className = 'q-diff ' + dinfo.cls;
+      diff.hidden = false;
+    } else {
+      diff.className = 'q-diff';
+      diff.hidden = true;
+    }
 
     $('#q-text').textContent = q ? q.question : '这个分类暂时没有题目';
 
@@ -293,7 +313,11 @@
     });
 
     const b = await DS.api.probe();
-    if (!b.online) { markOffline(); return; }
+    const offlineCapable = DS.offline && DS.offline.available();
+    if (!b.online) {
+      if (!offlineCapable) { markOffline(); return; }
+      DS.toast.warn('后端未连接，已切换到离线模式：刷题、判题、解析均可本地使用。');
+    }
     const okd = await loadCats();
     if (okd) refreshStats();
   }

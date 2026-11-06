@@ -2,7 +2,7 @@
 后端接口自动测试脚本（无第三方依赖，仅用标准库 urllib）
 用法：先启动服务，再运行  python test_api.py
 
-P-008：期望题数从 questions.json 动态读取，不再硬编码 "list=8 / 共 32 题"。
+P-008：期望题数从 data/questions.json 动态读取，不再硬编码 "list=8 / 共 32 题"。
 """
 
 import json
@@ -16,14 +16,14 @@ PASS, FAIL = 0, 0
 
 # 从仓库数据文件读取期望值，避免每次加题都改测试
 _HERE = os.path.dirname(os.path.abspath(__file__))
-with open(os.path.join(_HERE, "questions.json"), "r", encoding="utf-8") as _f:
+with open(os.path.join(_HERE, "data", "questions.json"), "r", encoding="utf-8") as _f:
     _QBANK = json.load(_f)
 CATEGORY_COUNTS = {k: len(v.get("questions", [])) for k, v in _QBANK.items()}
 TOTAL_QUESTIONS = sum(CATEGORY_COUNTS.values())
 NUM_CATEGORIES = len(CATEGORY_COUNTS)
 
 
-def call(method: str, path: str, body: dict = None, expect_code: int = 0):
+def call(method: str, path: str, body: dict | None = None, expect_code: int = 0):
     """发请求并断言响应 code 字段"""
     global PASS, FAIL
     req = urllib.request.Request(

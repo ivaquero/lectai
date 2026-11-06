@@ -77,13 +77,19 @@
    */
   async function request(path, opt) {
     const o = opt || {};
+    const method = o.method || 'GET';
+    // ★ 自动降级：后端已判定不可达且本路径可离线应答 → 直接返回本地快照，不发请求。
+    if (DS.offline && DS.offline.active && DS.offline.available()) {
+      const local = DS.offline.handle(method, path, o.body);
+      if (local) return local;
+    }
     const ctrl = new AbortController();
     let timedOut = false;
     const timer = setTimeout(() => { timedOut = true; ctrl.abort(); }, o.timeout || 8000);
     let res;
     try {
       res = await fetch(API_BASE + path, {
-        method: o.method || 'GET',
+        method: method,
         headers: {
           'Content-Type': 'application/json',
           'X-Session-Id': sessionId()
@@ -94,6 +100,11 @@
     } catch (e) {
       clearTimeout(timer);
       backend.online = false;
+      // ★ 自动降级：连接失败 / 超时那一刻，尝试用本地快照应答本页所需接口。
+      if (DS.offline && DS.offline.available()) {
+        const local = DS.offline.handle(method, path, o.body);
+        if (local) { DS.offline.enable(); return local; }
+      }
       if (timedOut) {
         return { ok: false, data: null, msg: '请求超时，请稍后重试', offline: true, kind: 'timeout' };
       }
@@ -142,7 +153,7 @@
     post: (p, body, o) => request(p, Object.assign({ method: 'POST', body }, o)),
     del: (p, o) => request(p, Object.assign({ method: 'DELETE' }, o)),
 
-    /** 探测健康状态 */
+    /** 探测健康状态；后端不可达时自动切到本地离线快照（若离线数据可用） */
     async probe() {
       try {
         const ctrl = new AbortController();
@@ -150,11 +161,23 @@
         const res = await fetch(API_BASE + '/api/health', { signal: ctrl.signal });
         clearTimeout(timer);
         const json = await res.json();
-        backend.online = json.code === 0;
-        backend.info = json.data || null;
+        if (json.code === 0) {
+          backend.online = true;
+          backend.info = json.data || null;
+          if (DS.offline) DS.offline.disable(); // 后端恢复 → 关掉降级
+        } else {
+          backend.online = false;
+          backend.info = null;
+        }
       } catch (e) {
         backend.online = false;
         backend.info = null;
+      }
+      // 后端不可达 + 本地快照可用 → 启用降级，并用离线 health 填 info（首页统计等）
+      if (!backend.online && DS.offline && DS.offline.available()) {
+        DS.offline.enable();
+        const h = DS.offline.handle('GET', '/api/health');
+        if (h && h.ok) backend.info = h.data;
       }
       backend.checked = true;
       document.dispatchEvent(new CustomEvent('backend:ready', { detail: backend }));

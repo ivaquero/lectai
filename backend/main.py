@@ -7,7 +7,7 @@
   §1  请求模型（响应工具与统一 ok/err 已抽到 core.response）
   §2  会话（唯一真相源，见 core.session.get_store）
   §3  单链表 / 栈 / 队列 REST 接口（旧版 · 兼容层，底层委托给 algo/*_trace.py）
-  §4  题库接口（/api/quiz/*：取题、提交答案、统计）—— questions.json 懒加载
+  §4  题库接口（/api/quiz/*：取题、提交答案、统计）—— data/questions.json 懒加载
   §5  AI 答疑接口（/api/ai/ask，预留大模型接入位，当前返回模拟回答）
   §6  健康检查 + 前端静态托管（可选）
 
@@ -19,7 +19,7 @@
   · P-007 巨型文件收敛：main.py 里的 LinkedList/Stack/Queue 三份重复实现全部删除，
     旧 §6 端点通过 algo/*_trace.py 的 op_* 生成最终状态；ok/err 唯一定义点
     在 core/response.py。
-  · P-010 questions.json / kb.json 改为 _LazyJson 懒加载 + mtime 热更新。
+  · P-010 data/questions.json / data/kb.json 改为 _LazyJson 懒加载 + mtime 热更新。
   · P-011 CORS 从环境变量注入，去掉与 "*" 冲突的 allow_credentials=True。
   · P-012 X-Session-Id 走正则校验，非法 sid 归入 default 并记 warning。
   · P-003 AI 答疑 / 题库判题响应加 answer/explanation_content_type 字段，
@@ -520,7 +520,7 @@ def queue_reset(body: ValuesIn, session_id: str | None = SessionHeader):
 # ==========================================================================
 # §4 题库（P-010 懒加载 + mtime 热更新）
 # --------------------------------------------------------------------------
-# 题库数据在 questions.json（前端 quiz 页通过 /api/quiz/questions 拉取，
+# 题库数据在 data/questions.json（前端 quiz 页通过 /api/quiz/questions 拉取，
 # 不返回 ans/exp/key，防止前端作弊；判题一律走 /api/quiz/submit）。
 # ==========================================================================
 
@@ -551,8 +551,8 @@ class _LazyJson:
             return self._data
 
 
-QUIZ_PATH = os.path.join(BASE_DIR, "questions.json")
-KB_PATH = os.path.join(BASE_DIR, "kb.json")
+QUIZ_PATH = os.path.join(BASE_DIR, "data", "questions.json")
+KB_PATH = os.path.join(BASE_DIR, "data", "kb.json")
 
 
 def _build_index(raw: dict) -> dict:
@@ -602,6 +602,7 @@ def quiz_questions(category: str):
             "tag": q.get("tag", ""),
             "question": q["q"],
             "options": q["opts"],  # 4 个选项，下标 0~3 对应 A~D
+            "difficulty": q.get("diff", "mid"),  # basic / mid / hard
         }
         for i, q in enumerate(bank[category]["questions"], 1)
     ]
@@ -633,6 +634,7 @@ def quiz_submit(body: SubmitIn, session_id: str | None = SessionHeader):
     return ok(
         data={
             "question_id": q["id"],
+            "difficulty": q.get("diff", "mid"),
             "correct": correct,
             "answer_index": q["ans"],
             "answer_letter": letters[q["ans"]],

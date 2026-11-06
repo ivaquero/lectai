@@ -82,15 +82,28 @@
       el.setAttribute('role', 'status');
       box.insertBefore(el, box.firstChild);
     }
-    el.innerHTML =
-      '<b>后端未连接</b>' +
-      '<span>本页数据由 FastAPI 提供。在 <code>backend</code> 目录执行 ' +
-      '<code>uvicorn main:app --port 8000</code> 后点重试。</span>' +
-      '<button class="btn" type="button" id="banner-retry">重试</button>';
+
+    const offlineCapable = window.DS.offline && window.DS.offline.available();
+    if (offlineCapable) {
+      el.className = 'offline-banner info';
+      el.innerHTML =
+        '<b>离线模式已启用</b>' +
+        '<span>后端未连接，本页已自动切换到本地快照：刷题、判题、解析、答疑、首页统计均可离线使用；' +
+        '仅链表 / 栈 / 队列的逐步可视化需要后端。要启用可视化，在 <code>backend</code> 目录执行 ' +
+        '<code>uvicorn main:app --port 8000</code> 后点重试。</span>' +
+        '<button class="btn" type="button" id="banner-retry">重试</button>';
+    } else {
+      el.className = 'offline-banner';
+      el.innerHTML =
+        '<b>后端未连接</b>' +
+        '<span>本页数据由 FastAPI 提供。在 <code>backend</code> 目录执行 ' +
+        '<code>uvicorn main:app --port 8000</code> 后点重试。</span>' +
+        '<button class="btn" type="button" id="banner-retry">重试</button>';
+    }
     $('#banner-retry').onclick = () => {
       DS.backend.checked = false;
       applyBackend();
-      DS.api.probe().then(applyBackend);
+      DS.api.probe().then(() => { applyBackend(); renderOfflineBanner(); });
     };
   }
 

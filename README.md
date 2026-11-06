@@ -35,7 +35,8 @@ lectai/
 │   ├── api/*_trace.py          /api/{linkedlist,stack,queue}/trace/* 路由
 │   ├── core/session.py         统一会话存储：TTL + LRU + sid 正则
 │   ├── core/response.py        ok/err 唯一定义点 {code,msg,data}
-│   ├── questions.json / kb.json    题库(6 类 112) / 本地知识库(21 条)
+│   ├── data/questions.json     题库(6 类 112，每题带 diff 难度标签)
+│   ├── data/kb.json            答疑本地知识库(21 条)
 │   └── pyproject.toml / uv.lock    uv 项目定义 + 锁文件
 └── web/                        静态前端（原生 HTML/CSS/JS，无构建）
     ├── *.html                  首页 / 单链表 / 刷题 / 答疑
