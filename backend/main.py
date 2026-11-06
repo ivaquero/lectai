@@ -6,10 +6,12 @@
 功能模块
   §1  请求模型（响应工具与统一 ok/err 已抽到 core.response）
   §2  会话（唯一真相源，见 core.session.get_store）
-  §3  单链表 / 栈 / 队列 REST 接口（旧版 · 兼容层，底层委托给 algo/*_trace.py）
+  §2b 会话头别名（SessionHeader，供 §4 复用）
+      —— 链表 / 栈 / 队列的 HTTP 面已整体收敛到 api/*_trace.py 的 /trace/* 路由，
+         main.py 不再自带旧版兼容层（审计 P-002 删除原 §3 共 12 个端点）。
   §4  题库接口（/api/quiz/*：取题、提交答案、统计）—— data/questions.json 懒加载
   §5  AI 答疑接口（/api/ai/ask，预留大模型接入位，当前返回模拟回答）
-  §6  健康检查 + 前端静态托管（可选）
+  §6  健康检查 + 前端静态托管（可选）+ /api/* JSON 404 兜底（P-012）
 
 ★ 本次重构要点（对应 2026-11-06 审计报告 P0/P1）★
   · P-001 会话合并：main.SESSIONS / TRACE_SESSIONS / STACK_SESSIONS / QUEUE_SESSIONS
@@ -40,24 +42,20 @@ import os
 import threading
 import time
 
-from algo import linkedlist_trace as LL
-from algo import queue_trace as Q
-from algo import stack_trace as S
-from algo.linkedlist_trace import OpError as LLOpError
-from algo.stack_trace import OpError as SeqOpError  # queue_trace 复用同一 OpError
-from api.stackqueue_trace import queue_router, stack_router
-from api.trace import router as trace_router
-from core.response import err, ok
-from core.session import (
-    get_container,
-    get_store,
-    session_count,
-    session_stats,
-)
 from fastapi import FastAPI, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+
+from api.stackqueue_trace import queue_router, stack_router
+from api.trace import router as trace_router
+from core.response import err, ok
+from core.session import (
+    get_store,
+    session_count,
+    session_lock,
+    session_stats,
+)
 
 log = logging.getLogger("lectai")
 if not log.handlers:
@@ -119,34 +117,8 @@ app.include_router(queue_router)
 # 所有接口统一返回：{ "code": 0, "msg": "ok", "data": {...} }
 #   code = 0 成功；code = 1 业务错误（栈空、位序越界等）
 # 业务错误不抛 HTTP 异常、统一 200，方便前端 JS 只看 code 字段统一处理。
-
-
-class ValueIn(BaseModel):
-    """数值输入（链表结点值 / 栈元素 / 队列元素）"""
-
-    value: int = Field(ge=-9999, le=9999, description="元素数值，整数")
-
-
-class PosIn(BaseModel):
-    """位序输入（链表按位删除，1-based）"""
-
-    pos: int = Field(ge=1, description="位序，从 1 开始")
-
-
-class SearchIn(BaseModel):
-    """查询输入（按值查找）"""
-
-    value: int = Field(ge=-9999, le=9999)
-
-
-class ValuesIn(BaseModel):
-    """批量载入（前端初始化/重置时用它和后端对齐状态）"""
-
-    values: list[int] = Field(
-        default_factory=list,
-        max_length=12,
-        description="元素序列，最长 12 与可视化上限对齐",
-    )
+# 链表/栈/队列的请求模型定义在各自的 api/*_trace.py 路由里；本模块只保留
+# §4 刷题、§5 答疑两个业务接口用到的模型。
 
 
 class SubmitIn(BaseModel):
@@ -165,356 +137,9 @@ class AskIn(BaseModel):
 
 
 # --------------------------------------------------------------------------
-# §3 单链表 / 栈 / 队列 兼容层
+# §2b 会话头别名（§4 刷题接口复用）
 # --------------------------------------------------------------------------
-# 旧接口不再自带 LinkedList/Stack/Queue 三份重复实现：
-#   · 容器对象来自 core.session（TraceList / TraceStack / TraceQueue）
-#   · 每个写操作调用 algo/*_trace.py 的 op_*，取轨迹最后一步的快照作为最终状态
-#   · 只回传最终状态（nodes/items/length/msg），不回传 trace
-# 与 /trace/* 新版接口共享同一 store，读写完全对齐（P-001）。
-
 SessionHeader = Header(default=None, alias="X-Session-Id")
-
-
-def _final_state(payload: dict) -> list:
-    """从 op_* 返回体的最后一步快照抽出主链 items/nodes"""
-    steps = payload.get("trace") or []
-    if not steps:
-        return []
-    last = steps[-1]
-    return last.get("nodes") or last.get("items") or []
-
-
-def _ll(sid: str | None):
-    return get_container(sid, "list")
-
-
-def _stack(sid: str | None):
-    return get_container(sid, "stack")
-
-
-def _queue(sid: str | None):
-    return get_container(sid, "queue")
-
-
-# ---------------------------- 单链表 ----------------------------
-
-
-@app.get("/api/linkedlist", summary="查询单链表当前状态（兼容层）")
-def ll_state(session_id: str | None = SessionHeader):
-    ll = _ll(session_id)
-    nodes = ll.to_nodes()
-    return ok(
-        data={
-            "nodes": nodes,
-            "length": len(nodes),
-            "empty": len(nodes) == 0,
-            "msg": f"当前链表共 {len(nodes)} 个结点"
-            + ("（空表 head->next == NULL）" if not nodes else ""),
-        }
-    )
-
-
-@app.post("/api/linkedlist/insert-head", summary="头插结点（兼容层）")
-def ll_insert_head(body: ValueIn, session_id: str | None = SessionHeader):
-    ll = _ll(session_id)
-    try:
-        payload = LL.op_insert_head(ll, body.value)
-    except LLOpError as e:
-        return err(str(e))
-    return ok(
-        data={
-            "nodes": _final_state(payload),
-            "length": payload["length"],
-            "msg": payload["trace"][-1]["info"],
-        }
-    )
-
-
-@app.post("/api/linkedlist/insert-tail", summary="尾插结点（兼容层）")
-def ll_insert_tail(body: ValueIn, session_id: str | None = SessionHeader):
-    ll = _ll(session_id)
-    try:
-        payload = LL.op_insert_tail(ll, body.value)
-    except LLOpError as e:
-        return err(str(e))
-    return ok(
-        data={
-            "nodes": _final_state(payload),
-            "length": payload["length"],
-            "msg": payload["trace"][-1]["info"],
-        }
-    )
-
-
-@app.post("/api/linkedlist/delete", summary="按位序删除结点（兼容层）")
-def ll_delete(body: PosIn, session_id: str | None = SessionHeader):
-    ll = _ll(session_id)
-    try:
-        payload = LL.op_delete_pos(ll, body.pos)
-    except LLOpError as e:
-        return err(str(e))
-    return ok(
-        data={
-            "nodes": _final_state(payload),
-            "length": payload["length"],
-            "msg": payload["trace"][-1]["info"],
-        }
-    )
-
-
-@app.post("/api/linkedlist/delete-value", summary="按值删除第一个匹配结点（兼容层）")
-def ll_delete_value(body: SearchIn, session_id: str | None = SessionHeader):
-    ll = _ll(session_id)
-    try:
-        payload = LL.op_delete_value(ll, body.value)
-    except LLOpError as e:
-        return err(str(e))
-    return ok(
-        data={
-            "nodes": _final_state(payload),
-            "length": payload["length"],
-            "msg": payload["trace"][-1]["info"],
-        }
-    )
-
-
-@app.post("/api/linkedlist/search", summary="按值查找（兼容层）")
-def ll_search(body: SearchIn, session_id: str | None = SessionHeader):
-    ll = _ll(session_id)
-    payload = LL.op_search(ll, body.value)
-    result = payload.get("result", {"found": False, "pos": -1})
-    msg = (
-        f"找到 {body.value}：位于第 {result['pos']} 个结点"
-        if result["found"]
-        else f"{body.value} 不在链表中"
-    )
-    return ok(
-        data={
-            **result,
-            "nodes": _final_state(payload),
-            "length": payload["length"],
-            "msg": msg,
-        }
-    )
-
-
-@app.delete("/api/linkedlist", summary="清空链表（兼容层）")
-def ll_clear(session_id: str | None = SessionHeader):
-    ll = _ll(session_id)
-    ll.clear()
-    return ok(data={"nodes": [], "length": 0, "msg": "链表已清空（head 置为 NULL）"})
-
-
-@app.post("/api/linkedlist/reset", summary="按给定序列重建链表（兼容层）")
-def ll_reset(body: ValuesIn, session_id: str | None = SessionHeader):
-    ll = _ll(session_id)
-    try:
-        payload = LL.op_build(ll, body.values)
-    except LLOpError as e:
-        return err(str(e))
-    return ok(
-        data={
-            "nodes": _final_state(payload),
-            "length": payload["length"],
-            "msg": payload["trace"][-1]["info"],
-        }
-    )
-
-
-# ------------------------------- 栈 -------------------------------
-
-
-def _stack_snapshot(st) -> dict:
-    vals = st.values()
-    return {"items": vals, "size": len(vals), "top": vals[-1] if vals else None}
-
-
-@app.get("/api/stack", summary="查询栈当前状态（兼容层）")
-def stack_state(session_id: str | None = SessionHeader):
-    st = _stack(session_id)
-    snap = _stack_snapshot(st)
-    return ok(
-        data={
-            **snap,
-            "empty": snap["size"] == 0,
-            "msg": f"栈内 {snap['size']} 个元素"
-            + (f"，栈顶 {snap['top']}" if snap["size"] else "（空栈）"),
-        }
-    )
-
-
-@app.post("/api/stack/push", summary="入栈（兼容层）")
-def stack_push(body: ValueIn, session_id: str | None = SessionHeader):
-    st = _stack(session_id)
-    try:
-        payload = S.op_push(st, body.value)
-    except SeqOpError as e:
-        return err(str(e))
-    snap = _stack_snapshot(st)
-    return ok(data={**snap, "top": body.value, "msg": payload["trace"][-1]["info"]})
-
-
-@app.post("/api/stack/pop", summary="出栈（兼容层）")
-def stack_pop(session_id: str | None = SessionHeader):
-    st = _stack(session_id)
-    try:
-        payload = S.op_pop(st)
-    except SeqOpError as e:
-        return err(str(e))
-    popped = payload["result"]["value"]
-    snap = _stack_snapshot(st)
-    return ok(
-        data={
-            "popped": popped,
-            "remain": snap["size"],
-            "items": snap["items"],
-            "msg": payload["trace"][-1]["info"],
-        }
-    )
-
-
-@app.get("/api/stack/peek", summary="查看栈顶（不出栈，兼容层）")
-def stack_peek(session_id: str | None = SessionHeader):
-    st = _stack(session_id)
-    try:
-        payload = S.op_peek(st)
-    except SeqOpError as e:
-        return err(str(e))
-    top = payload["result"]["value"]
-    return ok(
-        data={
-            "top": top,
-            "size": st.length(),
-            "msg": f"栈顶元素为 {top}（仅查看，未弹出）",
-        }
-    )
-
-
-@app.delete("/api/stack", summary="清空栈（兼容层）")
-def stack_clear(session_id: str | None = SessionHeader):
-    st = _stack(session_id)
-    n = st.length()
-    st.items = []
-    return ok(
-        data={"items": [], "size": 0, "msg": f"已清空栈（释放 {n} 个元素，top 重置）"}
-    )
-
-
-@app.post("/api/stack/reset", summary="按给定序列重建栈（兼容层）")
-def stack_reset(body: ValuesIn, session_id: str | None = SessionHeader):
-    st = _stack(session_id)
-    try:
-        payload = S.op_build(st, body.values)
-    except SeqOpError as e:
-        return err(str(e))
-    snap = _stack_snapshot(st)
-    return ok(data={**snap, "msg": payload["trace"][-1]["info"]})
-
-
-# ------------------------------ 队列 ------------------------------
-
-
-def _queue_snapshot(q) -> dict:
-    vals = q.values()
-    return {
-        "items": vals,
-        "size": len(vals),
-        "front": vals[0] if vals else None,
-        "rear": vals[-1] if vals else None,
-    }
-
-
-@app.get("/api/queue", summary="查询队列当前状态（兼容层）")
-def queue_state(session_id: str | None = SessionHeader):
-    q = _queue(session_id)
-    snap = _queue_snapshot(q)
-    return ok(
-        data={
-            **snap,
-            "empty": snap["size"] == 0,
-            "msg": f"队内 {snap['size']} 个元素"
-            + (
-                f"，队头 {snap['front']} 队尾 {snap['rear']}"
-                if snap["size"]
-                else "（空队列 front == rear）"
-            ),
-        }
-    )
-
-
-@app.post("/api/queue/enqueue", summary="入队（队尾，兼容层）")
-def queue_enqueue(body: ValueIn, session_id: str | None = SessionHeader):
-    q = _queue(session_id)
-    try:
-        payload = Q.op_enqueue(q, body.value)
-    except SeqOpError as e:
-        return err(str(e))
-    snap = _queue_snapshot(q)
-    return ok(data={**snap, "rear": body.value, "msg": payload["trace"][-1]["info"]})
-
-
-@app.post("/api/queue/dequeue", summary="出队（队头，兼容层）")
-def queue_dequeue(session_id: str | None = SessionHeader):
-    q = _queue(session_id)
-    try:
-        payload = Q.op_dequeue(q)
-    except SeqOpError as e:
-        return err(str(e))
-    dequeued = payload["result"]["value"]
-    snap = _queue_snapshot(q)
-    return ok(
-        data={
-            "dequeued": dequeued,
-            "remain": snap["size"],
-            "items": snap["items"],
-            "msg": payload["trace"][-1]["info"],
-        }
-    )
-
-
-@app.get("/api/queue/peek", summary="查看队头（不出队，兼容层）")
-def queue_peek(session_id: str | None = SessionHeader):
-    q = _queue(session_id)
-    try:
-        payload = Q.op_peek(q)
-    except SeqOpError as e:
-        return err(str(e))
-    front = payload["result"]["value"]
-    rear = q.rear().value if q.rear() else None
-    return ok(
-        data={
-            "front": front,
-            "rear": rear,
-            "size": q.length(),
-            "msg": f"队头 {front}、队尾 {rear}（仅查看，未出队）",
-        }
-    )
-
-
-@app.delete("/api/queue", summary="清空队列（兼容层）")
-def queue_clear(session_id: str | None = SessionHeader):
-    q = _queue(session_id)
-    n = q.length()
-    q.items.clear()
-    return ok(
-        data={
-            "items": [],
-            "size": 0,
-            "msg": f"已清空队列（释放 {n} 个元素，front/rear 重置）",
-        }
-    )
-
-
-@app.post("/api/queue/reset", summary="按给定序列重建队列（兼容层）")
-def queue_reset(body: ValuesIn, session_id: str | None = SessionHeader):
-    q = _queue(session_id)
-    try:
-        payload = Q.op_build(q, body.values)
-    except SeqOpError as e:
-        return err(str(e))
-    snap = _queue_snapshot(q)
-    return ok(data={**snap, "msg": payload["trace"][-1]["info"]})
 
 
 # ==========================================================================
@@ -625,11 +250,12 @@ def quiz_submit(body: SubmitIn, session_id: str | None = SessionHeader):
     correct = body.answer == q["ans"]
     letters = "ABCD"
 
-    store = get_store(session_id)
-    stat = store["quiz_stats"].setdefault(q["category"], {"done": 0, "right": 0})
-    stat["done"] += 1
-    if correct:
-        stat["right"] += 1
+    with session_lock(session_id):
+        store = get_store(session_id)
+        stat = store["quiz_stats"].setdefault(q["category"], {"done": 0, "right": 0})
+        stat["done"] += 1
+        if correct:
+            stat["right"] += 1
 
     return ok(
         data={
@@ -791,6 +417,26 @@ def health():
             "kb_entries": kb_entries,
             "data_ok": data_ok,
         }
+    )
+
+
+# --------------------------------------------------------------------------
+# §6b 未匹配 /api/* 的 JSON 兜底（P-012）
+# --------------------------------------------------------------------------
+# 注册在全部真实 /api 路由之后、StaticFiles("/") 挂载之前：否则拼错的 /api/xxx
+# 会掉进 SPA 静态兜底、返回首页 HTML(200)，前端 request() 把 JSON 解析失败误判成
+# "后端离线"。这里显式回 404 + 统一 {code:1} JSON，前端据此报"接口不存在"而非离线。
+@app.api_route(
+    "/api/{full_path:path}",
+    methods=["GET", "POST", "DELETE", "PUT", "PATCH"],
+    include_in_schema=False,
+)
+def api_not_found(full_path: str):
+    from fastapi.responses import JSONResponse
+
+    return JSONResponse(
+        status_code=404,
+        content={"code": 1, "msg": f"接口不存在：/api/{full_path}", "data": None},
     )
 
 

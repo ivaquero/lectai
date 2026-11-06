@@ -17,7 +17,10 @@
   'use strict';
 
   var DS = (window.DS = window.DS || {});
-  var O = DS.OFFLINE;
+  // P-005：offline-data.js 现在可能尚未加载（改为按需动态注入），这里只做个初始引用，
+  // 真正就绪与否以 loadSnapshot() 之后的 O 为准。
+  var O = DS.OFFLINE || null;
+  var _loadP = null;
 
   var LETTERS = 'ABCD';
 
@@ -212,11 +215,49 @@
   /** 快照是否已就绪（offline-data.js 是否加载） */
   function available() { return !!O; }
 
+  /* ============================ 按需注入快照（P-005） ============================
+     offline-data.js 体积不小（约 78KB），过去在 index/quiz/ai 三页无条件同步加载，
+     即使后端在线也会白下载一份用不到的数据。现在改为：只有 api.js 的 probe() 探测到
+     后端离线、且本页声明了 data-offline-snapshot 时，才动态注入这段脚本。
+
+     coreDir() 靠扫描当前文档里 core/offline.js 自身的 <script src> 反推目录，
+     这样脚本前缀（assets/js/… 或带版本串）改了也不用同步维护；找不到再退回默认路径。 */
+  function coreDir() {
+    var scripts = document.getElementsByTagName('script');
+    for (var i = 0; i < scripts.length; i++) {
+      var src = scripts[i].src || '';
+      var at = src.indexOf('core/offline.js');
+      if (at !== -1) return src.slice(0, at) + 'core/';
+    }
+    return 'assets/js/core/';
+  }
+
+  function loadSnapshot() {
+    if (O) return Promise.resolve(true);
+    if (_loadP) return _loadP;
+    _loadP = new Promise(function (resolve) {
+      var s = document.createElement('script');
+      s.src = coreDir() + 'offline-data.js';
+      s.async = true;
+      var done = function () {
+        s.onload = s.onerror = null;
+        O = (window.DS || {}).OFFLINE || null;
+        resolve(!!O);
+      };
+      s.onload = done;
+      s.onerror = function () { done(); };
+      document.head.appendChild(s);
+    });
+    return _loadP;
+  }
+
   DS.offline = {
     available: available,
     handle: handle,
     enable: enable,
     disable: disable,
+    loadSnapshot: loadSnapshot,
+    ensureSnapshot: loadSnapshot,
     get active() { return active; }
   };
 })();

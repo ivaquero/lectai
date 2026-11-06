@@ -23,8 +23,13 @@ algo/stack_trace.py —— 顺序栈「步骤轨迹」生成器
 
 import itertools
 
+from ._seq_base import OpError, SeqTracer, seq_meta, seq_state_payload
+
 # 教学演示容量：太大了画布装不下
 MAX_ITEMS = 10
+
+# 栈只有 top 一个结构指针，交给 SeqTracer 做粘性保持（P-003）
+_ANCHORS = ("top",)
 
 
 class Item:
@@ -36,83 +41,6 @@ class Item:
     def __init__(self, value: int):
         self.id = f"k{next(Item._seq)}"
         self.value = value
-
-
-class OpError(Exception):
-    """业务错误：栈满 / 栈空。由路由层转成 code=1"""
-
-
-# ==========================================================================
-# SeqTracer —— 顺序结构（栈 / 队列）通用的轨迹记录器
-# ==========================================================================
-
-
-class SeqTracer:
-    def __init__(self):
-        self.steps: list = []
-        self.visited = 0
-        self.moves = 0
-        self.compares = 0
-        self.ptr: dict = {}
-        self.aside: list = []
-        self._visited_ids: set = set()
-        self._new_ids: set = set()
-
-    @staticmethod
-    def _flat(items) -> list:
-        """栈底 → 栈顶 依次编号 a1, a2, ..."""
-        return [
-            {"id": it.id, "value": it.value, "label": f"a{i + 1}"}
-            for i, it in enumerate(items)
-        ]
-
-    @staticmethod
-    def _aside_flat(items) -> list:
-        return [{"id": it.id, "value": it.value, "label": None} for it in items]
-
-    def _ptr_json(self) -> dict:
-        # 用鸭子类型判断（队列会用自己的 Item 类），只看有没有 id
-        out = {}
-        for k, v in self.ptr.items():
-            out[k] = v.id if hasattr(v, "id") else v
-        return out
-
-    def _mark(self, items, compare=(), remove=()) -> dict:
-        order = [it.id for it in items] + [it.id for it in self.aside]
-
-        def keep(ids):
-            return [i for i in order if i in ids]
-
-        return {
-            "compare": keep(set(compare or ())),
-            "visited": keep(self._visited_ids),
-            "new": keep(self._new_ids),
-            "remove": keep(set(remove or ())),
-        }
-
-    def push(
-        self, items, line, info, compare=(), remove=(), ptr=None, aside=None
-    ) -> dict:
-        if ptr is not None:
-            self.ptr.update({k: v for k, v in ptr.items()})
-        if aside is not None:
-            self.aside = list(aside)
-        snap = {
-            "seq": len(self.steps),
-            "items": self._flat(items),
-            "aside": self._aside_flat(self.aside),
-            "ptr": self._ptr_json(),
-            "mark": self._mark(items, compare, remove),
-            "line": line,
-            "counters": {
-                "visited": self.visited,
-                "moves": self.moves,
-                "compares": self.compares,
-            },
-            "info": info,
-        }
-        self.steps.append(snap)
-        return snap
 
 
 # ==========================================================================
@@ -170,15 +98,8 @@ OPS = {
 
 
 def _meta(op: str, n: int) -> dict:
-    meta = OPS[op]
-    return {
-        "op": op,
-        "title": meta["title"],
-        "code": {"lines": meta["lines"], "structural": meta["structural"]},
-        "length": n,
-        "max_nodes": MAX_ITEMS,
-        "trace": None,
-    }
+    """薄封装：绑定栈的 OPS 表与容量，实际组装在 _seq_base.seq_meta"""
+    return seq_meta(OPS, op, n, MAX_ITEMS)
 
 
 # ==========================================================================
@@ -216,7 +137,7 @@ def op_build(st: TraceStack, values: list) -> dict:
     if len(values) > MAX_ITEMS:
         raise OpError(f"最多支持 {MAX_ITEMS} 个元素，收到 {len(values)} 个")
 
-    t = SeqTracer()
+    t = SeqTracer(anchor_keys=_ANCHORS)
     st.items = []
     t.ptr = {"top": "NULL", "x": None}
     t.push(st.items, 0, "初始化：S.top = -1，空栈")
@@ -255,7 +176,7 @@ def op_push(st: TraceStack, value: int) -> dict:
     if st.length() >= MAX_ITEMS:
         raise OpError(f"栈满：已达上限 {MAX_ITEMS} 个元素，请先出栈")
 
-    t = SeqTracer()
+    t = SeqTracer(anchor_keys=_ANCHORS)
     item = Item(value)
     t._new_ids.add(item.id)
 
@@ -291,7 +212,7 @@ def op_pop(st: TraceStack) -> dict:
     if not st.items:
         raise OpError("栈空，无法出栈")
 
-    t = SeqTracer()
+    t = SeqTracer(anchor_keys=_ANCHORS)
     top = st.top()
     t.ptr = {"top": top, "x": None}
     t.push(st.items, 0, f"准备出栈：当前栈顶 = {top.value}")
@@ -329,7 +250,7 @@ def op_peek(st: TraceStack) -> dict:
     if not st.items:
         raise OpError("栈空，读不到栈顶")
 
-    t = SeqTracer()
+    t = SeqTracer(anchor_keys=_ANCHORS)
     top = st.top()
     t.ptr = {"top": top, "x": None}
     t.push(st.items, 0, "检查栈空：top != -1，栈非空", compare=[top.id])
@@ -348,7 +269,7 @@ def op_peek(st: TraceStack) -> dict:
 
 
 def op_traverse(st: TraceStack) -> dict:
-    t = SeqTracer()
+    t = SeqTracer(anchor_keys=_ANCHORS)
     if not st.items:
         t.ptr = {"top": "NULL"}
         t.push(st.items, None, "空栈，没有可访问的元素")
@@ -386,10 +307,4 @@ def op_traverse(st: TraceStack) -> dict:
 
 def state_payload(st: TraceStack) -> dict:
     """无轨迹的当前状态（首屏对齐 / 快速自检）"""
-    return {
-        "op": "state",
-        "length": st.length(),
-        "max_nodes": MAX_ITEMS,
-        "items": st.to_items(),
-        "trace": [],
-    }
+    return seq_state_payload(st, MAX_ITEMS)

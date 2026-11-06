@@ -24,10 +24,13 @@ algo/queue_trace.py —— 循环队列「步骤轨迹」生成器
 import itertools
 from collections import deque
 
-from .stack_trace import OpError, SeqTracer
+from ._seq_base import OpError, SeqTracer, seq_meta, seq_state_payload
 
 MAX_ITEMS = 10  # 数组容量（含牺牲的一个单元，最多放 9 个）
 CAPACITY = MAX_ITEMS  # 数组长度
+
+# 队列有 front / rear 两个结构指针，交给 SeqTracer 做粘性保持（P-003）
+_ANCHORS = ("front", "rear")
 
 
 class Item:
@@ -92,15 +95,8 @@ OPS = {
 
 
 def _meta(op: str, n: int) -> dict:
-    meta = OPS[op]
-    return {
-        "op": op,
-        "title": meta["title"],
-        "code": {"lines": meta["lines"], "structural": meta["structural"]},
-        "length": n,
-        "max_nodes": MAX_ITEMS - 1,  # 牺牲一个单元，实际最多放 9 个
-        "trace": None,
-    }
+    """薄封装：绑定队列 OPS 表与牺牲一单元后的容量，组装在 _seq_base.seq_meta"""
+    return seq_meta(OPS, op, n, MAX_ITEMS - 1)
 
 
 class TraceQueue:
@@ -151,7 +147,7 @@ def op_build(q: TraceQueue, values: list) -> dict:
     if len(values) > CAPACITY - 1:
         raise OpError(f"最多支持 {CAPACITY - 1} 个元素，收到 {len(values)} 个")
 
-    t = SeqTracer()
+    t = SeqTracer(anchor_keys=_ANCHORS)
     q.items = deque()
     t.ptr = {"front": "NULL", "rear": "NULL", "x": None}
     t.push(
@@ -187,7 +183,7 @@ def op_enqueue(q: TraceQueue, value: int) -> dict:
             f"队满：循环队列最多放 {CAPACITY - 1} 个元素（容量 {CAPACITY}，牺牲一个单元）"
         )
 
-    t = SeqTracer()
+    t = SeqTracer(anchor_keys=_ANCHORS)
     item = Item(value)
     t._new_ids.add(item.id)
 
@@ -229,7 +225,7 @@ def op_dequeue(q: TraceQueue) -> dict:
     if not q.items:
         raise OpError("队空，无法出队")
 
-    t = SeqTracer()
+    t = SeqTracer(anchor_keys=_ANCHORS)
     head = q.front()
     t.ptr = {"front": head, "rear": q.rear(), "x": None}
     t.push(q.items, 0, f"准备出队：当前队头 = {head.value}")
@@ -281,7 +277,7 @@ def op_peek(q: TraceQueue) -> dict:
     if not q.items:
         raise OpError("队空，读不到队头")
 
-    t = SeqTracer()
+    t = SeqTracer(anchor_keys=_ANCHORS)
     head = q.front()
     t.ptr = {"front": head, "rear": q.rear(), "x": None}
     t.push(q.items, 0, "检查队空：front != rear，队非空", compare=[head.id])
@@ -301,7 +297,7 @@ def op_peek(q: TraceQueue) -> dict:
 
 
 def op_traverse(q: TraceQueue) -> dict:
-    t = SeqTracer()
+    t = SeqTracer(anchor_keys=_ANCHORS)
     if not q.items:
         t.ptr = {"front": "NULL", "rear": "NULL"}
         t.push(q.items, None, "空队，没有可访问的元素")
@@ -342,11 +338,4 @@ def _stamp_ring(out: dict, q: TraceQueue):
 
 
 def state_payload(q: TraceQueue) -> dict:
-    return {
-        "op": "state",
-        "length": q.length(),
-        "max_nodes": CAPACITY - 1,
-        "items": q.to_items(),
-        "ring": q.ring(),
-        "trace": [],
-    }
+    return seq_state_payload(q, MAX_ITEMS - 1, extra={"ring": q.ring()})

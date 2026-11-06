@@ -19,6 +19,12 @@
 
   const API_BASE = sameOrigin ? '' : API_ORIGIN;
 
+  /**
+   * 超时阈值分级（P-010）：不同接口对延迟容忍度不同，集中一处便于调整。
+   *   request 常规操作默认上限 / probe 健康探测（要快）/ state 首屏对齐 / ai 大模型留足余量
+   */
+  const TIMEOUTS = { request: 8000, probe: 2500, state: 4000, ai: 20000 };
+
   /** 后端状态（各页共享） */
   const backend = (DS.backend = {
     online: false,
@@ -85,7 +91,7 @@
     }
     const ctrl = new AbortController();
     let timedOut = false;
-    const timer = setTimeout(() => { timedOut = true; ctrl.abort(); }, o.timeout || 8000);
+    const timer = setTimeout(() => { timedOut = true; ctrl.abort(); }, o.timeout || TIMEOUTS.request);
     let res;
     try {
       res = await fetch(API_BASE + path, {
@@ -148,6 +154,7 @@
     request,
     base: API_BASE,
     origin: API_ORIGIN,
+    TIMEOUTS,
     sessionId,
     get: (p, o) => request(p, Object.assign({ method: 'GET' }, o)),
     post: (p, body, o) => request(p, Object.assign({ method: 'POST', body }, o)),
@@ -157,7 +164,7 @@
     async probe() {
       try {
         const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), 2500);
+        const timer = setTimeout(() => ctrl.abort(), TIMEOUTS.probe);
         const res = await fetch(API_BASE + '/api/health', { signal: ctrl.signal });
         clearTimeout(timer);
         const json = await res.json();
@@ -173,11 +180,21 @@
         backend.online = false;
         backend.info = null;
       }
-      // 后端不可达 + 本地快照可用 → 启用降级，并用离线 health 填 info（首页统计等）
-      if (!backend.online && DS.offline && DS.offline.available()) {
-        DS.offline.enable();
-        const h = DS.offline.handle('GET', '/api/health');
-        if (h && h.ok) backend.info = h.data;
+      // 后端不可达 + 本页声明支持离线快照 → 懒加载 offline-data.js 并启用降级。
+      // P-005：不再靠 index/quiz/ai 页无条件同步 <script> 拉 78KB，只有真离线时才注入。
+      if (!backend.online && DS.offline) {
+        const docEl = document.documentElement;
+        const capable =
+          (docEl && docEl.hasAttribute('data-offline-snapshot')) ||
+          (document.body && document.body.hasAttribute('data-offline-snapshot'));
+        if (capable && !DS.offline.available()) {
+          try { await DS.offline.loadSnapshot(); } catch (e) { /* 注入失败，保持普通离线态 */ }
+        }
+        if (DS.offline.available()) {
+          DS.offline.enable();
+          const h = DS.offline.handle('GET', '/api/health');
+          if (h && h.ok) backend.info = h.data;
+        }
       }
       backend.checked = true;
       document.dispatchEvent(new CustomEvent('backend:ready', { detail: backend }));

@@ -8,8 +8,11 @@
   3. X-Session-Id 强校验：字符集 [A-Za-z0-9_-]、长度 1~64，非法 sid 归入
      "default"（不抛错，避免第三方探测把服务打崩），并写 warning 日志。
   4. 底层数据结构统一采用 algo/*_trace.py 的 TraceList / TraceStack / TraceQueue，
-     新接口与旧接口读写同一份对象；main.py §3-§5 的重复实现因此可以整段删除。
-  5. 环境变量：
+     新接口与旧接口读写同一份对象；main.py §3 的兼容层重复实现因此可整段删除
+     （§4 刷题、§5 答疑是真实业务端点，保留）。
+  5. 每个会话 store 自带一把 RLock（见 session_lock），供写接口串行化同一 sid
+     的并发变更（FastAPI 同步 def 跑在线程池，同容器无锁会竞态）。
+  6. 环境变量：
        LECTAI_SESSION_TTL   单位秒，默认 3600
        LECTAI_SESSION_MAX   最多保留会话数，默认 10000
 """
@@ -105,13 +108,26 @@ def _make_default_store() -> dict:
         "stack": _S.TraceStack(),
         "queue": _Q.TraceQueue(),
         "quiz_stats": {},
+        # 会话级写锁：串行化同一 sid 的并发变更（P-011）。随 store 一起创建 / LRU 淘汰。
+        "lock": threading.RLock(),
     }
 
 
 def get_store(session_id: str | None) -> dict:
-    """按（已规整的）session id 取会话 store；不存在则用默认序列初始化。"""
+    """按（已规整的）session id 取会话 store；不存在则新建空容器。
+
+    链表 / 栈 / 队列一律空起步，教学初始序列由前端挂载时显式调 /trace/build 载入。
+    """
     sid = normalize_sid(session_id)
     return _STORE.get_or_create(sid, _make_default_store)
+
+
+def session_lock(session_id: str | None) -> threading.RLock:
+    """返回该会话的写锁，供会修改容器的接口串行化同 sid 并发（P-011）。
+
+    用法：`with session_lock(sid): ...`。跨不同 sid 无争用；同 sid 串行。
+    """
+    return get_store(session_id)["lock"]
 
 
 def get_container(session_id: str | None, kind: str):

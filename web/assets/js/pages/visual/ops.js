@@ -9,20 +9,9 @@
 
   const DS = window.DS;
 
+  /** 统一走 core/parse.js，栈 / 队列语境用「个元素」 */
   function parseNums(text, max) {
-    const out = [];
-    String(text || '')
-      .split(/[,，\s]+/)
-      .forEach((t) => {
-        if (!t) return;
-        const v = parseInt(t, 10);
-        if (!isNaN(v)) out.push(v);
-      });
-    if (max && out.length > max) {
-      out.length = max;
-      DS.toast.warn('最多 ' + max + ' 个元素，多余部分已忽略');
-    }
-    return out;
+    return DS.parseNums(text, max, '个元素');
   }
 
   /* ------------------------------- 栈 ------------------------------- */
@@ -206,5 +195,4 @@
   DS.stackOps = STACK_OPS;
   DS.queueOps = QUEUE_OPS;
   DS.seqLegend = SEQ_LEGEND;
-  DS.visualParseNums = parseNums;
 })();

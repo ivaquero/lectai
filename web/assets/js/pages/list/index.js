@@ -167,7 +167,7 @@
     btn.disabled = true;
     btn.textContent = '执行中…';
 
-    const r = await DS.api.post(current.path, body, { timeout: 8000 });
+    const r = await DS.api.post(current.path, body, { timeout: DS.api.TIMEOUTS.request });
     btn.disabled = false;
     btn.textContent = '执行';
 
@@ -181,7 +181,7 @@
 
   async function resetList() {
     if (!booted) { DS.toast.warn('后端未连接'); return; }
-    const r = await DS.api.post(API + '/build', { values: DS.parseNums(DEFAULT_VALUES, MOD.max) });
+    const r = await DS.api.post(API + '/build', { values: DS.parseNums(DEFAULT_VALUES, MOD.max, MOD.unit) });
     if (!r.ok) {
       if (r.offline) markOffline();
       else DS.toast.danger(r.msg || '重置失败');
@@ -193,7 +193,7 @@
 
   /** 拉取当前状态（不带轨迹），用于首屏与执行后对齐长度 */
   async function fetchState() {
-    const r = await DS.api.get(API + '/state', { timeout: 4000 });
+    const r = await DS.api.get(API + '/state', { timeout: DS.api.TIMEOUTS.state });
     if (!r.ok) return null;
     const d = r.data;
     $('#meta-len').textContent = String(d.length);
@@ -209,7 +209,7 @@
 
   let traceLoadSeq = 0;   // 每次装载递增（测试与调试可观测）
 
-  function loadTrace(meta) {
+  function loadTrace(meta, autoplay) {
     if (!meta || !Array.isArray(meta.trace) || !meta.trace.length) {
       DS.toast.warn('后端没有返回轨迹');
       return;
@@ -222,7 +222,8 @@
     $('#code-title').textContent = meta.title || '对应代码';
     buildStepList(meta.trace);
     lastIds = new Set();
-    trace.play();
+    if (autoplay === false) trace.last();   // 首屏默认序列：直接停在终态，不播动画
+    else trace.play();
   }
 
   /** 无轨迹时的静态状态视图 */
@@ -409,6 +410,41 @@
     });
   }
 
+  /* ============================ 注册表对账（P-004） ============================
+     后端 GET /api/{mod}/ops 是「这个模块有哪些操作」的单一真相源。首屏拉一次，
+     和本地 ops.js 的 OPS key 集合对账：漂移只在控制台 + toast 提示，绝不打断回放。
+     对不上通常意味着有人在某一侧加了新操作却漏改另一侧——提示去补齐，而非硬失败。 */
+  async function checkOpsRegistry() {
+    const opsPath = MOD.api.replace(/\/trace$/, '') + '/ops';
+    const r = await DS.api.get(opsPath, { timeout: DS.api.TIMEOUTS.state });
+    if (!r.ok || !r.data || !Array.isArray(r.data.ops)) return;
+    const serverKeys = r.data.ops.map((o) => o.key);
+    const localKeys = OPS.map((o) => o.key);
+    const onlyClient = localKeys.filter((k) => serverKeys.indexOf(k) === -1);
+    const onlyServer = serverKeys.filter((k) => localKeys.indexOf(k) === -1);
+    if (!onlyClient.length && !onlyServer.length) return;
+    const parts = [];
+    if (onlyClient.length) parts.push('前端多出：' + onlyClient.join('、'));
+    if (onlyServer.length) parts.push('后端新增未接：' + onlyServer.join('、'));
+    const msg = '操作清单与后端不一致（' + parts.join('；') + '），请同步 ops.js';
+    DS.toast.warn(msg);
+    if (window.console && console.warn) console.warn('[lectai] ' + msg);
+  }
+
+  /* 首屏：后端每个会话都以空容器起步（不在服务端预置初值，避免覆盖用户已改的状态），
+     所以挂载时若当前为空，就显式载入本模块的默认演示序列，让画布一开始就有内容可看。 */
+  async function bootDefaults() {
+    const d = await fetchState();
+    if (!d || d.length > 0) return;   // 非空：fetchState 已经画出当前状态
+    const r = await DS.api.post(
+      API + '/build',
+      { values: DS.parseNums(DEFAULT_VALUES, MOD.max, MOD.unit) },
+      { timeout: DS.api.TIMEOUTS.request }
+    );
+    if (r.ok) loadTrace(r.data, false);
+    else if (r.offline) markOffline();
+  }
+
   async function init() {
     trace = new DS.Trace();
     applyModuleText();
@@ -426,7 +462,8 @@
       return;
     }
     booted = true;
-    await fetchState();
+    bootDefaults();
+    checkOpsRegistry();
   }
 
   // 同一页面内切换模块（顶部 tab 改 hash）：整页重载最简单可靠，

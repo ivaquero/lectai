@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="assets/css/components.css">
 <link rel="stylesheet" href="assets/css/pages/home.css">
 </head>
-<body data-page="home">
+<body data-page="home" data-offline-snapshot>
 
 <header class="topbar">
   <div class="topbar-inner">
@@ -145,11 +145,11 @@
     <span class="path-step"><b>04</b>不懂就问</span>
   </section>
 
-  <p class="more-note">更多演示 · 前两个已改用新版页面，二叉树与排序仍沿用旧版演示页</p>
+  <p class="more-note">更多演示 · 栈与队列，和链表一样在后端跑完整条轨迹后逐步回放</p>
   <section class="entries more" aria-label="更多演示">
     <a class="entry compact" href="visual.html#stack">
       <span class="entry-mark" aria-hidden="true">S</span>
-      <h3>栈 <span class="entry-badge">新版</span></h3>
+      <h3>栈</h3>
       <p>push / pop / peek，LIFO，重点看"先移指针还是先取值"。</p>
       <div class="entry-tags"><span>LIFO</span><span>O(1)</span></div>
       <span class="entry-go">打开</span>
@@ -162,22 +162,6 @@
       <div class="entry-tags"><span>FIFO</span><span>O(1)</span></div>
       <span class="entry-go">打开</span>
     </a>
-
-    <a class="entry compact" href="legacy/visual.html#tree">
-      <span class="entry-mark" aria-hidden="true">T</span>
-      <h3>二叉搜索树</h3>
-      <p>插入、查找、删除，中序遍历有序是它的核心性质。</p>
-      <div class="entry-tags"><span>BST</span><span>O(h)</span></div>
-      <span class="entry-go">打开</span>
-    </a>
-
-    <a class="entry compact" href="legacy/visual.html#sort">
-      <span class="entry-mark" aria-hidden="true">↑</span>
-      <h3>冒泡排序</h3>
-      <p>相邻比较交换，看清楚每一趟把最大值推到末尾。</p>
-      <div class="entry-tags"><span>O(n²)</span><span>稳定</span></div>
-      <span class="entry-go">打开</span>
-    </a>
   </section>
 
 </main>
@@ -187,8 +171,6 @@
   <span class="sep">/</span>
   <span>原生 JS + FastAPI</span>
   <span class="sep">/</span>
-  <a href="legacy/visual.html">旧版多模块演示（栈 / 队列 / 二叉树 / 排序）</a>
-  <span class="sep">/</span>
   <span>&copy; <span id="foot-year">2026</span></span>
 </footer>
 
@@ -196,7 +178,6 @@
 <script src="assets/js/core/sanitize.js"></script>
 <script src="assets/js/core/toast.js"></script>
 <script src="assets/js/core/api.js"></script>
-<script src="assets/js/core/offline-data.js"></script>
 <script src="assets/js/core/offline.js"></script>
 <script src="assets/js/shell.js"></script>
 <script src="assets/js/pages/home.js"></script>

@@ -102,7 +102,7 @@
     const bubble = addThinking();
     const t0 = performance.now();
 
-    const r = await DS.api.post('/api/ai/ask', { question: text }, { timeout: 20000 });
+    const r = await DS.api.post('/api/ai/ask', { question: text }, { timeout: DS.api.TIMEOUTS.ai });
     const ms = Math.round(performance.now() - t0);
 
     pending = false;
