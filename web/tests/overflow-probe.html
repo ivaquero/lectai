@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>响应式溢出探针 · 数据结构学习平台</title>
+<style>
+  body { font: 13px/1.6 ui-monospace, Consolas, monospace; margin: 16px; }
+  h1 { font-size: 15px; margin: 0 0 10px; }
+  pre { background: #f6f8fb; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px; }
+  iframe { border: 1px solid #e2e8f0; display: block; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<h1>响应式溢出探针</h1>
+<pre id="out">测量中…</pre>
+<div id="frames"></div>
+
+<script>
+/**
+ * 在真实浏览器里逐档加载四个页面，测量横向溢出。
+ * 用 iframe 控制视口宽度，媒体查询按 iframe 宽度生效。
+ * 结果写进 <pre id="out">，便于 --dump-dom 抓取。
+ */
+(function () {
+  'use strict';
+
+  var PAGES = ['index.html', 'list.html', 'quiz.html', 'ai.html'];
+  var WIDTHS = [1440, 900, 620];
+  var lines = [];
+  var jobs = [];
+
+  PAGES.forEach(function (p) {
+    WIDTHS.forEach(function (w) { jobs.push({ page: p, width: w }); });
+  });
+
+  var i = 0;
+
+  function finish() {
+    var bad = lines.filter(function (l) { return l.indexOf('溢出 0px') === -1; });
+    var head = bad.length
+      ? '存在横向溢出（溢出 > 2px 视为不合格）：'
+      : '三档宽度均无横向溢出，共 ' + lines.length + ' 项。';
+    document.getElementById('out').textContent =
+      head + '\n' + lines.join('\n');
+  }
+
+  function next() {
+    if (i >= jobs.length) { finish(); return; }
+    var job = jobs[i++];
+    var frame = document.createElement('iframe');
+    frame.style.width = job.width + 'px';
+    frame.style.height = '900px';
+    frame.src = '../' + job.page;
+
+    frame.onload = function () {
+      setTimeout(function () {
+        var d = frame.contentDocument;
+        var root = d && d.documentElement;
+        if (!root) {
+          lines.push(job.page + ' @' + job.width + ' → 无法读取');
+        } else {
+          var over = root.scrollWidth - root.clientWidth;
+          // 找出最宽的越界元素，便于定位
+          var worst = '';
+          Array.prototype.forEach.call(d.body.querySelectorAll('*'), function (el) {
+            var r = el.getBoundingClientRect();
+            if (r.right > job.width + 2) {
+              var name = el.tagName.toLowerCase() +
+                (el.id ? '#' + el.id : '') +
+                (el.className && typeof el.className === 'string'
+                  ? '.' + el.className.trim().split(/\s+/).join('.') : '');
+              if (!worst || r.right > worst.right) worst = { right: r.right, name: name };
+            }
+          });
+          lines.push(job.page + ' @' + job.width + ' → 溢出 ' + over + 'px' +
+            (over > 2 && worst ? '  最宽越界：' + worst.name + ' (right=' +
+              Math.round(worst.right) + ')' : ''));
+        }
+        frame.remove();
+        next();
+      }, 700);
+    };
+
+    document.getElementById('frames').appendChild(frame);
+  }
+
+  next();
+})();
+</script>
+</body>
+</html>

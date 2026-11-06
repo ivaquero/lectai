@@ -1,0 +1,235 @@
+/* ==========================================================================
+   pages/ai.css —— AI 答疑页
+   对话优先：消息区自适应高度，输入框吸底
+   ========================================================================== */
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
+}
+
+/* ------------------------------ 消息流 ---------------------------------- */
+
+.msgs {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 2px 12px;
+  max-height: 58vh;
+  min-height: 300px;
+}
+
+.msg {
+  display: flex;
+  gap: 10px;
+  max-width: 88%;
+}
+
+.msg.who-user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.avatar {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.msg.who-ai .avatar {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  color: var(--accent);
+}
+
+.msg.who-user .avatar {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+}
+
+.bubble {
+  border-radius: var(--radius);
+  padding: 9px 13px;
+  font-size: 13.5px;
+  line-height: 1.7;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.msg.who-ai .bubble {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-top-left-radius: 3px;
+}
+
+.msg.who-user .bubble {
+  background: var(--accent);
+  color: #fff;
+  border-top-right-radius: 3px;
+}
+
+.bubble p {
+  margin: 0;
+}
+
+.bubble p + p {
+  margin-top: 7px;
+}
+
+.bubble code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
+.msg.who-user .bubble code {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+
+.bubble .text-muted,
+.bubble .muted {
+  color: var(--text-faint);
+  font-size: 12px;
+}
+
+/* 答案标题（命中知识库时） */
+.bubble .ans-title {
+  font-weight: 650;
+  margin-bottom: 5px;
+  color: var(--accent);
+}
+
+/* 来源角标 */
+.src {
+  margin-top: 7px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* ------------------------------ 输入区 ---------------------------------- */
+
+.askbar {
+  display: flex;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.askbar textarea {
+  flex: 1;
+  min-height: 42px;
+  max-height: 120px;
+  resize: none;
+  font: inherit;
+  font-size: 13.5px;
+  line-height: 1.55;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--text);
+}
+
+.askbar textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.askbar .btn {
+  flex: none;
+  align-self: flex-end;
+}
+
+/* 思考中占位（三个点跳动） */
+.thinking {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px 2px;
+}
+
+.thinking i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  animation: think 1s ease-in-out infinite;
+}
+
+.thinking i:nth-child(2) { animation-delay: 0.15s; }
+.thinking i:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes think {
+  0%, 100% { opacity: 0.3; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-3px); }
+}
+
+/* ------------------------------ 快捷问题 -------------------------------- */
+
+.hotq {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hotq button {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: var(--radius-pill);
+  padding: 4px 11px;
+  font-size: 12px;
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: all var(--dur);
+  font-family: inherit;
+}
+
+.hotq button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* ------------------------------- 响应式 --------------------------------- */
+
+@media (max-width: 1080px) {
+  .side {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .msgs {
+    min-height: 260px;
+    max-height: 52vh;
+  }
+  .askbar {
+    flex-wrap: wrap;
+  }
+  .askbar textarea {
+    min-height: 62px;
+  }
+  .askbar .btn {
+    width: 100%;
+  }
+  .bubble {
+    padding: 9px 12px;
+  }
+}

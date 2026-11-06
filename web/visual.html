@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>可视化演示 · 数据结构学习平台</title>
+<meta name="description" content="单链表头插、尾插、按位删除、按值删除、查找、遍历的分步可视化，可单步、可回退，每步对应一行 C 代码。">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/layout.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/pages/list.css">
+</head>
+<body data-page="visual">
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">数据结构学习平台</span>
+      <span class="brand-page">单链表</span>
+    </a>
+    <nav class="nav" aria-label="主导航">
+      <a class="nav-item" data-nav="home" href="index.html">首页</a>
+      <a class="nav-item" data-nav="list" href="list.html">单链表</a>
+      <a class="nav-item" data-nav="quiz" href="quiz.html">刷题</a>
+      <a class="nav-item" data-nav="ai" href="ai.html">AI 答疑</a>
+      <span class="nav-status checking" id="nav-status"><i></i><span>检测后端…</span></span>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+
+  <div class="page-head">
+    <div>
+      <h1>单链表可视化</h1>
+      <p class="lede">算法在后端跑完并生成整条步骤轨迹，这里只负责回放——所以能暂停、能单步、能回退，每一步都对应一行代码。</p>
+    </div>
+    <div class="head-meta">
+      当前长度 <b id="meta-len">–</b> · 上限 <b id="meta-max">12</b> · 会话 <span id="meta-sid">–</span>
+    </div>
+  </div>
+
+  <div class="mod-tabs" role="tablist" aria-label="可视化模块">
+    <a class="mod-tab" data-mod="list" href="#list">单链表</a>
+    <a class="mod-tab" data-mod="stack" href="#stack">栈</a>
+    <a class="mod-tab" data-mod="queue" href="#queue">队列</a>
+  </div>
+
+  <div class="split">
+
+    <!-- ============================ 左：舞台 ============================ -->
+    <div class="stage">
+
+      <!-- 1. 操作选择 -->
+      <section class="card">
+        <h2>选择操作 <span class="h2-note">切换后填写参数，再点「执行」</span></h2>
+        <div class="op-tabs" id="op-tabs" role="tablist" aria-label="链表操作"></div>
+      </section>
+
+      <!-- 2. 画布 -->
+      <section class="card">
+        <h2>链表状态 <span class="h2-note" id="canvas-note">–</span></h2>
+        <div class="canvas-wrap" id="canvas-wrap">
+          <div class="canvas-empty" id="canvas-empty">
+            <span class="mark" aria-hidden="true">∅</span>
+            <span>正在连接后端…</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. 图例 -->
+      <div class="legend" id="legend" aria-label="颜色图例"></div>
+
+      <!-- 4. 复杂度 -->
+      <div class="complexity" id="complexity"></div>
+
+      <!-- 5. 当前步解说 -->
+      <div class="readout">
+        <span class="readout-label" id="readout-step">步 0/0</span>
+        <span class="readout-text" id="readout-text">准备就绪</span>
+      </div>
+      <div class="progress"><i id="progress-bar" style="width:0%"></i></div>
+
+      <!-- 6. 播放控制 -->
+      <div class="transport">
+        <div class="transport-buttons">
+          <button class="btn" id="btn-first" aria-label="回到开头" title="回到开头 (Home)">⏮</button>
+          <button class="btn" id="btn-prev" aria-label="上一步" title="上一步 (←)">◀</button>
+          <button class="btn primary" id="btn-play" aria-label="播放或暂停" title="播放 / 暂停 (空格)">▶ 播放</button>
+          <button class="btn" id="btn-next" aria-label="下一步" title="下一步 (→)">▶</button>
+          <button class="btn" id="btn-last" aria-label="跳到结尾" title="跳到结尾 (End)">⏭</button>
+        </div>
+        <div class="transport-speed">
+          <label for="speed">速度</label>
+          <input type="range" id="speed" min="1" max="100" value="42" aria-label="播放速度">
+          <span class="mono" id="speed-label">–</span>
+        </div>
+      </div>
+      <div class="keyhints">
+        <span><kbd>空格</kbd>播放/暂停</span>
+        <span><kbd>←</kbd><kbd>→</kbd>单步</span>
+        <span><kbd>Home</kbd><kbd>End</kbd>首尾</span>
+        <span><kbd>Esc</kbd>停止</span>
+      </div>
+
+      <!-- 7. 统计 -->
+      <div class="chips">
+        <div class="chip"><span class="chip-label">结点数</span><span class="chip-value" id="c-len">0</span></div>
+        <div class="chip"><span class="chip-label">比较</span><span class="chip-value" id="c-cmp">0</span></div>
+        <div class="chip"><span class="chip-label">指针移动</span><span class="chip-value" id="c-mov">0</span></div>
+        <div class="chip"><span class="chip-label">已访问</span><span class="chip-value" id="c-vis">0</span></div>
+      </div>
+
+    </div>
+
+    <!-- ============================ 右：侧栏 ============================ -->
+    <aside class="side">
+
+      <!-- 操作面板 -->
+      <section class="card">
+        <h2>操作面板 <span class="h2-note" id="op-title">–</span></h2>
+        <p class="op-desc" id="op-desc">–</p>
+        <form class="op-form" id="op-form" autocomplete="off"></form>
+        <div class="row">
+          <button class="btn primary" id="btn-run" type="button">执行</button>
+          <button class="btn" id="btn-reset" type="button" title="恢复为默认序列 3,1,4,1,5">重置</button>
+        </div>
+        <p class="hint small" id="op-hint">执行会真的修改后端会话里的链表。</p>
+      </section>
+
+      <!-- C 代码 -->
+      <section class="card grow">
+        <h2>对应代码 <span class="h2-note" id="code-title">–</span></h2>
+        <button class="btn code-toggle" id="code-toggle" type="button"
+                aria-expanded="false" aria-controls="pseudo">查看代码</button>
+        <div class="pseudo" id="pseudo">
+          <div class="empty"><span class="empty-mark">C</span><span>执行任意操作后显示代码</span></div>
+        </div>
+      </section>
+
+      <!-- 步骤列表 -->
+      <section class="card">
+        <h2>步骤 <span class="h2-note">点任意一步跳转</span></h2>
+        <ul class="step-list" id="step-list">
+          <li><span class="n">–</span><span>还没有轨迹</span></li>
+        </ul>
+      </section>
+
+      <!-- 要点 -->
+      <section class="card">
+        <h2>易错点</h2>
+        <ul class="tips" id="tips"></ul>
+      </section>
+
+    </aside>
+
+  </div>
+
+</main>
+
+<footer class="page-foot">
+  <span>数据结构学习平台</span>
+  <span class="sep">/</span>
+  <span>轨迹由 FastAPI 生成</span>
+  <span class="sep">/</span>
+  <a href="legacy/visual.html">旧版多模块演示</a>
+  <span class="sep">/</span>
+  <span>&copy; <span id="foot-year">2026</span></span>
+</footer>
+
+<script src="assets/js/core/dom.js"></script>
+<script src="assets/js/core/toast.js"></script>
+<script src="assets/js/core/api.js"></script>
+<script src="assets/js/core/keys.js"></script>
+<script src="assets/js/core/trace.js"></script>
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/pages/list/render.js"></script>
+<script src="assets/js/pages/list/ops.js"></script>
+<script src="assets/js/pages/visual/render.js"></script>
+<script src="assets/js/pages/visual/ops.js"></script>
+<script src="assets/js/pages/list/index.js"></script>
+</body>
+</html>

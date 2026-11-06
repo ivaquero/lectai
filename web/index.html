@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数据结构学习平台 · 看得见的指针</title>
+<meta name="description" content="单链表可视化演示、在线刷题与 AI 答疑，逐步看清指针怎么走、结点怎么连。">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/layout.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/pages/home.css">
+</head>
+<body data-page="home">
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">数据结构学习平台</span>
+      <span class="brand-page">首页</span>
+    </a>
+    <nav class="nav" aria-label="主导航">
+      <a class="nav-item" data-nav="home" href="index.html">首页</a>
+      <a class="nav-item" data-nav="list" href="list.html">单链表</a>
+      <a class="nav-item" data-nav="quiz" href="quiz.html">刷题</a>
+      <a class="nav-item" data-nav="ai" href="ai.html">AI 答疑</a>
+      <span class="nav-status checking" id="nav-status"><i></i><span>检测后端…</span></span>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+
+  <section class="hero">
+    <div>
+      <h1>数据结构，<em>看得见</em>。</h1>
+      <p class="lede">
+        把指针怎么走、结点怎么连、边界为什么最容易错，拆成一步一步的动画。
+        可以暂停、单步、回退，每一步都对应一行代码。
+      </p>
+      <div class="hero-actions">
+        <a class="btn primary" href="list.html">开始演示</a>
+        <a class="btn" href="quiz.html">去刷题</a>
+      </div>
+      <p class="hero-metrics">
+        <span><b id="m-quiz">32</b> 道题</span>
+        <span><b id="m-kb">21</b> 条知识库</span>
+        <span><b>7</b> 个链表操作</span>
+        <span><b>0</b> 个外部依赖</span>
+      </p>
+    </div>
+
+    <figure class="hero-figure">
+      <svg viewBox="0 0 420 168" role="img" aria-labelledby="hero-svg-title">
+        <title id="hero-svg-title">单链表示意：head 指向第一个结点，p 指针停在第三个结点，末尾是空指针</title>
+        <defs>
+          <marker id="h-arrow" viewBox="0 0 10 10" refX="8" refY="5"
+                  markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="#94a3b8" stroke-width="1.6"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+
+        <text x="41" y="46" font-size="11" fill="#2563eb" text-anchor="middle"
+              font-family="ui-monospace, Consolas, monospace">head</text>
+        <path d="M41 50 L41 58" fill="none" stroke="#2563eb" stroke-width="1"/>
+        <text x="209" y="46" font-size="11" fill="#8b5cf6" text-anchor="middle"
+              font-family="ui-monospace, Consolas, monospace">p</text>
+        <path d="M209 50 L209 58" fill="none" stroke="#8b5cf6" stroke-width="1"/>
+
+        <g fill="#ffffff" stroke="#94a3b8" stroke-width="1.2">
+          <rect x="12" y="60" width="58" height="44" rx="7"/>
+          <rect x="96" y="60" width="58" height="44" rx="7"/>
+          <rect x="264" y="60" width="58" height="44" rx="7"/>
+        </g>
+        <rect x="180" y="60" width="58" height="44" rx="7" fill="#eff6ff" stroke="#2563eb" stroke-width="1.8"/>
+
+        <g font-size="15" fill="#1f2937" text-anchor="middle"
+           font-family="ui-monospace, Consolas, monospace">
+          <text x="41" y="88">3</text>
+          <text x="125" y="88">1</text>
+          <text x="209" y="88">4</text>
+          <text x="293" y="88">1</text>
+        </g>
+
+        <g stroke="#94a3b8" stroke-width="1.6" fill="none">
+          <path d="M70 82 L92 82" marker-end="url(#h-arrow)"/>
+          <path d="M154 82 L176 82" marker-end="url(#h-arrow)"/>
+          <path d="M238 82 L260 82" marker-end="url(#h-arrow)"/>
+          <path d="M322 82 L334 82" marker-end="url(#h-arrow)"/>
+        </g>
+        <text x="350" y="88" font-size="15" fill="#cbd5e1" text-anchor="middle"
+              font-family="ui-monospace, Consolas, monospace">∅</text>
+
+        <g font-size="10.5" fill="#94a3b8" text-anchor="middle"
+           font-family="ui-monospace, Consolas, monospace">
+          <text x="41" y="126">a1</text>
+          <text x="125" y="126">a2</text>
+          <text x="209" y="126">a3</text>
+          <text x="293" y="126">a4</text>
+        </g>
+        <text x="210" y="150" font-size="11" fill="#94a3b8" text-anchor="middle">
+          最后一个结点的 next 是 NULL，这是最高频的错点
+        </text>
+      </svg>
+      <figcaption>head 指向首结点；改链只能从已定位的指针下手</figcaption>
+    </figure>
+  </section>
+
+  <section class="entries" aria-label="功能入口">
+    <a class="entry" href="visual.html">
+      <span class="entry-mark" aria-hidden="true">&#8594;</span>
+      <h3>线性结构可视化</h3>
+      <p>单链表、栈、队列三个模块。每个动作都在后端跑完并生成整条轨迹，可单步、可回退。</p>
+      <div class="entry-tags"><span>单链表</span><span>栈</span><span>队列</span></div>
+      <span class="entry-go">进入演示</span>
+    </a>
+
+    <a class="entry" href="quiz.html">
+      <span class="entry-mark" aria-hidden="true">?</span>
+      <h3>在线刷题</h3>
+      <p>链表、栈与队列、树、排序四类题库，提交即判，解析与记忆点一起给出。</p>
+      <div class="entry-tags"><span>4 类</span><span>即时判题</span><span>答题卡</span></div>
+      <span class="entry-go">开始刷题</span>
+    </a>
+
+    <a class="entry" href="ai.html">
+      <span class="entry-mark" aria-hidden="true">&#10022;</span>
+      <h3>AI 答疑</h3>
+      <p>命中本地知识库就直接回答，未命中转大模型；每条回答都标出知识来源。</p>
+      <div class="entry-tags"><span>local_kb</span><span>21 条</span><span>来源可查</span></div>
+      <span class="entry-go">去提问</span>
+    </a>
+  </section>
+
+  <section class="pathline" aria-label="推荐学习路径">
+    <span class="path-title">学习路径</span>
+    <span class="path-step"><b>01</b>看演示</span>
+    <span class="path-link" aria-hidden="true"></span>
+    <span class="path-step"><b>02</b>动手操作</span>
+    <span class="path-link" aria-hidden="true"></span>
+    <span class="path-step"><b>03</b>刷题检验</span>
+    <span class="path-link" aria-hidden="true"></span>
+    <span class="path-step"><b>04</b>不懂就问</span>
+  </section>
+
+  <p class="more-note">更多演示 · 前两个已改用新版页面，二叉树与排序仍沿用旧版演示页</p>
+  <section class="entries more" aria-label="更多演示">
+    <a class="entry compact" href="visual.html#stack">
+      <span class="entry-mark" aria-hidden="true">S</span>
+      <h3>栈 <span class="entry-badge">新版</span></h3>
+      <p>push / pop / peek，LIFO，重点看"先移指针还是先取值"。</p>
+      <div class="entry-tags"><span>LIFO</span><span>O(1)</span></div>
+      <span class="entry-go">打开</span>
+    </a>
+
+    <a class="entry compact" href="visual.html#queue">
+      <span class="entry-mark" aria-hidden="true">Q</span>
+      <h3>队列 <span class="entry-badge">新版</span></h3>
+      <p>循环队列 enqueue / dequeue，看清牺牲一个单元如何区分空与满。</p>
+      <div class="entry-tags"><span>FIFO</span><span>O(1)</span></div>
+      <span class="entry-go">打开</span>
+    </a>
+
+    <a class="entry compact" href="legacy/visual.html#tree">
+      <span class="entry-mark" aria-hidden="true">T</span>
+      <h3>二叉搜索树</h3>
+      <p>插入、查找、删除，中序遍历有序是它的核心性质。</p>
+      <div class="entry-tags"><span>BST</span><span>O(h)</span></div>
+      <span class="entry-go">打开</span>
+    </a>
+
+    <a class="entry compact" href="legacy/visual.html#sort">
+      <span class="entry-mark" aria-hidden="true">↑</span>
+      <h3>冒泡排序</h3>
+      <p>相邻比较交换，看清楚每一趟把最大值推到末尾。</p>
+      <div class="entry-tags"><span>O(n²)</span><span>稳定</span></div>
+      <span class="entry-go">打开</span>
+    </a>
+  </section>
+
+</main>
+
+<footer class="page-foot">
+  <span>数据结构学习平台</span>
+  <span class="sep">/</span>
+  <span>原生 JS + FastAPI</span>
+  <span class="sep">/</span>
+  <a href="legacy/visual.html">旧版多模块演示（栈 / 队列 / 二叉树 / 排序）</a>
+  <span class="sep">/</span>
+  <span>&copy; <span id="foot-year">2026</span></span>
+</footer>
+
+<script src="assets/js/core/dom.js"></script>
+<script src="assets/js/core/toast.js"></script>
+<script src="assets/js/core/api.js"></script>
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/pages/home.js"></script>
+</body>
+</html>

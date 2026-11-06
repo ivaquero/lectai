@@ -1,0 +1,71 @@
+/* ==========================================================================
+   tokens.css —— 设计变量（唯一改配色的地方）
+   取自 p5js 模板：浅色投影风格，蓝主色，低对比描边，极轻阴影
+   ========================================================================== */
+
+:root {
+  /* 层次 */
+  --bg: #f2f5f9;
+  --panel: #ffffff;
+  --panel-sunken: #fbfdff;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  /* 文字三级 */
+  --text: #1f2937;
+  --text-soft: #64748b;
+  --text-faint: #94a3b8;
+
+  /* 主色 */
+  --accent: #2563eb;
+  --accent-strong: #1d4ed8;
+  --accent-soft: #eff6ff;
+  --accent-line: #bfdbfe;
+
+  /* 语义 */
+  --ok: #16a34a;
+  --ok-soft: #f0fdf4;
+  --ok-line: #bbf7d0;
+  --warn: #d97706;
+  --warn-soft: #fffbeb;
+  --warn-line: #fde68a;
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
+  --danger-line: #fecaca;
+  --info: #0ea5e9;
+
+  /* 链表语义色：全站同一语义同一颜色 */
+  --node-idle: #94a3b8;
+  --node-compare: #f59e0b;
+  --node-visited: #22c55e;
+  --node-new: #38bdf8;
+  --node-remove: #ef4444;
+  --node-ptr: #8b5cf6;
+  --node-null: #cbd5e1;
+
+  /* 形状与动效 */
+  --radius: 10px;
+  --radius-sm: 7px;
+  --radius-pill: 999px;
+  --shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 24px -12px rgba(15, 23, 42, 0.18);
+  --shadow-lift: 0 2px 4px rgba(15, 23, 42, 0.07), 0 14px 32px -14px rgba(15, 23, 42, 0.24);
+  --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --dur: 150ms;
+  --dur-move: 240ms;
+
+  /* 排版 */
+  --font-sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace;
+
+  /* 布局 */
+  --topbar-h: 56px;
+  --page-max: 1180px;
+  --side-w: 348px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur: 1ms;
+    --dur-move: 1ms;
+  }
+}

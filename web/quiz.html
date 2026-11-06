@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>在线刷题 · 数据结构学习平台</title>
+<meta name="description" content="链表、栈与队列、树、排序四类题库，提交即判，解析与关键记忆点一并给出。">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/layout.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/pages/quiz.css">
+</head>
+<body data-page="quiz">
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">数据结构学习平台</span>
+      <span class="brand-page">刷题</span>
+    </a>
+    <nav class="nav" aria-label="主导航">
+      <a class="nav-item" data-nav="home" href="index.html">首页</a>
+      <a class="nav-item" data-nav="list" href="list.html">单链表</a>
+      <a class="nav-item" data-nav="quiz" href="quiz.html">刷题</a>
+      <a class="nav-item" data-nav="ai" href="ai.html">AI 答疑</a>
+      <span class="nav-status checking" id="nav-status"><i></i><span>检测后端…</span></span>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+
+  <div class="page-head">
+    <div>
+      <h1>在线刷题</h1>
+      <p class="lede">题目与判题都在后端，提交前拿不到答案；解析和关键记忆点在提交后一并给出。</p>
+    </div>
+    <div class="head-meta">已答 <b id="meta-done">0</b> · 正确率 <b id="meta-acc">–</b></div>
+  </div>
+
+  <div class="split">
+
+    <!-- ============================ 左：答题区 ============================ -->
+    <div class="stage">
+
+      <!-- 分类 -->
+      <section class="card">
+        <h2>题库 <span class="h2-note" id="cat-note">–</span></h2>
+        <div class="cat-tabs" id="cat-tabs" role="tablist" aria-label="题库分类"></div>
+      </section>
+
+      <!-- 题目 -->
+      <section class="card">
+        <div class="q-head">
+          <span class="q-no" id="q-no">–</span>
+          <span class="q-tag" id="q-tag" hidden></span>
+        </div>
+        <p class="q-text" id="q-text">正在加载题目…</p>
+
+        <div class="opts" id="opts"></div>
+
+        <div class="verdict" id="verdict">
+          <div class="verdict-line" id="verdict-line"></div>
+          <div class="verdict-body" id="verdict-body"></div>
+          <div class="keypoint" id="keypoint" hidden><b>记忆点</b><span id="keypoint-text"></span></div>
+        </div>
+
+        <div class="row q-actions" style="margin-top:14px">
+          <button class="btn primary" id="btn-submit" disabled>提交答案</button>
+          <button class="btn" id="btn-next">下一题 →</button>
+        </div>
+        <p class="hint small">快捷键：<kbd>1</kbd>~<kbd>4</kbd> 选择，<kbd>Enter</kbd> 提交，<kbd>←</kbd><kbd>→</kbd> 切换题目。</p>
+
+        <!-- 窄屏答题卡（桌面端隐藏，由侧栏承载） -->
+        <div class="sheet-mini">
+          <div class="sheet" data-sheet></div>
+        </div>
+      </section>
+
+      <!-- 进度 -->
+      <section class="card">
+        <h2>本分类进度</h2>
+        <div class="quiz-progress-row">
+          <div class="progress"><i id="cat-progress" style="width:0%"></i></div>
+          <span class="mono" id="cat-progress-label">0/0</span>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ============================ 右：侧栏 ============================ -->
+    <aside class="side">
+
+      <!-- 答题卡 -->
+      <section class="card card-sheet">
+        <h2>答题卡 <span class="h2-note">点题号跳转</span></h2>
+        <div class="sheet" id="sheet" data-sheet></div>
+        <p class="hint small">绿=答对 · 红=答错 · 蓝=当前题 · 灰=未做</p>
+      </section>
+
+      <!-- 统计 -->
+      <section class="card">
+        <h2>本次会话统计</h2>
+        <div class="chips" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+          <div class="chip"><span class="chip-label">已答</span><span class="chip-value" id="s-done">0</span></div>
+          <div class="chip"><span class="chip-label">答对</span><span class="chip-value" id="s-right">0</span></div>
+          <div class="chip"><span class="chip-label">正确率</span><span class="chip-value" id="s-acc">–</span></div>
+        </div>
+      </section>
+
+      <!-- 提示 -->
+      <section class="card">
+        <h2>做题建议</h2>
+        <ul style="margin:0;padding-left:17px;font-size:12.5px;color:var(--text-soft);line-height:1.68">
+          <li>先在心里推一遍答案再看选项，避免被干扰项带偏。</li>
+          <li>错题的解析下方有「记忆点」，值得抄到笔记本。</li>
+          <li>答完一类后去单链表页把对应操作亲手跑一遍。</li>
+        </ul>
+      </section>
+
+    </aside>
+
+  </div>
+
+</main>
+
+<footer class="page-foot">
+  <span>数据结构学习平台</span>
+  <span class="sep">/</span>
+  <span>题库由 FastAPI 判题</span>
+  <span class="sep">/</span>
+  <span>&copy; <span id="foot-year">2026</span></span>
+</footer>
+
+<script src="assets/js/core/dom.js"></script>
+<script src="assets/js/core/toast.js"></script>
+<script src="assets/js/core/api.js"></script>
+<script src="assets/js/core/keys.js"></script>
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/pages/quiz.js"></script>
+</body>
+</html>

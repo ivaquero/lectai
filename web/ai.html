@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 答疑 · 数据结构学习平台</title>
+<meta name="description" content="数据结构答疑：命中本地知识库直接回答，未命中转大模型；每条回答标注来源。">
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/base.css">
+<link rel="stylesheet" href="assets/css/layout.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/pages/ai.css">
+</head>
+<body data-page="ai">
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="index.html">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">数据结构学习平台</span>
+      <span class="brand-page">AI 答疑</span>
+    </a>
+    <nav class="nav" aria-label="主导航">
+      <a class="nav-item" data-nav="home" href="index.html">首页</a>
+      <a class="nav-item" data-nav="list" href="list.html">单链表</a>
+      <a class="nav-item" data-nav="quiz" href="quiz.html">刷题</a>
+      <a class="nav-item" data-nav="ai" href="ai.html">AI 答疑</a>
+      <span class="nav-status checking" id="nav-status"><i></i><span>检测后端…</span></span>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+
+  <div class="page-head">
+    <div>
+      <h1>AI 答疑</h1>
+      <p class="lede">优先命中本地知识库（21 条高频考点），未命中转大模型。每条回答下方标注来源与耗时。</p>
+    </div>
+    <div class="head-meta">已提问 <b id="meta-asked">0</b> 次</div>
+  </div>
+
+  <div class="split">
+
+    <!-- ============================ 左：对话 ============================ -->
+    <div class="stage">
+      <section class="card grow chat">
+        <h2>对话 <span class="h2-note" id="chat-note">Enter 发送 · Shift+Enter 换行</span></h2>
+        <div class="msgs" id="msgs" aria-live="polite"></div>
+        <form class="askbar" id="askbar">
+          <textarea id="ask-input" placeholder="例如：KMP 的 next 数组怎么求？" aria-label="提问内容"></textarea>
+          <button class="btn primary" id="btn-ask" type="submit">发送</button>
+        </form>
+      </section>
+    </div>
+
+    <!-- ============================ 右：侧栏 ============================ -->
+    <aside class="side">
+
+      <section class="card">
+        <h2>热门问题 <span class="h2-note">点击直接问</span></h2>
+        <div class="hotq" id="hotq"></div>
+      </section>
+
+      <section class="card">
+        <h2>回答从哪来</h2>
+        <div class="legend" style="border:none;padding:2px 0 0">
+          <span class="legend-item"><span class="badge ok">local_kb</span>命中本地知识库</span>
+          <span class="legend-item"><span class="badge info">llm</span>大模型生成</span>
+          <span class="legend-item"><span class="badge warn">mock</span>未接入时的占位回答</span>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>提问技巧</h2>
+        <ul style="margin:0;padding-left:17px;font-size:12.5px;color:var(--text-soft);line-height:1.68">
+          <li>带上<b>术语</b>更容易命中知识库：KMP、循环队列、哈夫曼、堆。</li>
+          <li>问「为什么」比问「是什么」得到的解析更透。</li>
+          <li>刷题里做错的题，可以直接复制题干来问。</li>
+        </ul>
+      </section>
+
+    </aside>
+
+  </div>
+
+</main>
+
+<footer class="page-foot">
+  <span>数据结构学习平台</span>
+  <span class="sep">/</span>
+  <span>答疑由 FastAPI 提供</span>
+  <span class="sep">/</span>
+  <span>&copy; <span id="foot-year">2026</span></span>
+</footer>
+
+<script src="assets/js/core/dom.js"></script>
+<script src="assets/js/core/toast.js"></script>
+<script src="assets/js/core/api.js"></script>
+<script src="assets/js/shell.js"></script>
+<script src="assets/js/pages/ai.js"></script>
+</body>
+</html>

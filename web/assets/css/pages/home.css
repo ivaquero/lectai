@@ -1,0 +1,304 @@
+/* ==========================================================================
+   pages/home.css —— 首页：首屏、功能入口卡、学习路径
+   ========================================================================== */
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.06fr) minmax(0, 0.94fr);
+  gap: 36px;
+  align-items: center;
+  padding: 30px 0 34px;
+}
+
+.hero h1 {
+  font-size: clamp(28px, 3.3vw, 38px);
+  line-height: 1.24;
+  font-weight: 680;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.hero h1 em {
+  font-style: normal;
+  color: var(--accent);
+}
+
+.hero .lede {
+  margin-top: 14px;
+  max-width: 34em;
+  color: var(--text-soft);
+  font-size: 14.5px;
+  line-height: 1.75;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.hero-actions .btn {
+  padding: 9px 18px;
+  font-size: 13.5px;
+}
+
+.hero-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 20px;
+  color: var(--text-faint);
+  font-size: 12.5px;
+  font-family: var(--font-mono);
+}
+
+.hero-metrics b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.hero-figure {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 16px 14px 12px;
+}
+
+.hero-figure svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.hero-figure figcaption {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  color: var(--text-faint);
+  font-size: 11.5px;
+  text-align: center;
+}
+
+/* ------------------------------ 功能入口卡 ------------------------------ */
+
+.entries {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.entry {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 18px 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  color: inherit;
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur),
+    border-color var(--dur);
+}
+
+.entry:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lift);
+  border-color: var(--accent-line);
+  text-decoration: none;
+}
+
+.entry-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.entry h3 {
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.entry p {
+  color: var(--text-soft);
+  font-size: 12.5px;
+  line-height: 1.65;
+}
+
+.entry-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 2px;
+}
+
+.entry-tags span {
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  color: var(--text-faint);
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.entry-go {
+  margin-top: auto;
+  padding-top: 10px;
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.entry-go::after {
+  content: " →";
+  transition: margin-left var(--dur);
+}
+
+.entry:hover .entry-go::after {
+  margin-left: 3px;
+}
+
+/* ------------------------------- 学习路径 ------------------------------- */
+
+.pathline {
+  margin-top: 26px;
+  padding: 16px 18px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pathline .path-title {
+  color: var(--text-faint);
+  font-size: 12px;
+  margin-right: 4px;
+}
+
+.path-step {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--text);
+}
+
+.path-step b {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.path-link {
+  flex: 1 1 18px;
+  min-width: 18px;
+  height: 1px;
+  background: var(--border);
+}
+
+/* -------------------------------- 响应式 -------------------------------- */
+
+@media (max-width: 960px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    padding: 18px 0 24px;
+  }
+  .entries {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ------------------------- 更多演示（旧版入口） ------------------------- */
+
+.more-note {
+  margin: 26px 0 0;
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+
+.entries.more {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 8px;
+}
+
+.entries.more .entry {
+  padding: 13px 14px 12px;
+  gap: 6px;
+  background: transparent;
+  border-style: dashed;
+}
+
+.entries.more h3 {
+  font-size: 13.5px;
+}
+
+.entries.more p {
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.entries.more .entry-tags {
+  margin-top: 0;
+}
+
+.entries.more .entry-go {
+  font-size: 11.5px;
+}
+
+.entry-badge {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
+  color: var(--accent);
+  font-size: 10.5px;
+  font-weight: 600;
+  vertical-align: 1px;
+}
+
+@media (max-width: 960px) {
+  .entries.more {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .entries {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .entries.more {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hero h1 {
+    font-size: 27px;
+  }
+  .pathline {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .path-link {
+    display: none;
+  }
+}
