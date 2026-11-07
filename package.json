@@ -10,7 +10,11 @@
     "preview": "pnpm --filter lectai-web preview",
     "test": "pnpm --filter lectai-web test",
     "test:parity": "pnpm --filter lectai-web test:parity",
-    "typecheck": "pnpm --filter lectai-web typecheck"
+    "test:http-parity": "pnpm --filter @lectai/server test:http-parity",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "server": "pnpm --filter @lectai/server start",
+    "server:build": "pnpm --filter @lectai/server build",
+    "server:dev": "pnpm --filter @lectai/server dev"
   },
   "engines": {
     "node": ">=20"

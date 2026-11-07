@@ -5,7 +5,7 @@
 
    前提：后端已在 127.0.0.1:8000 运行
          cd backend && uv run uvicorn main:app --port 8000
-   用法：cd web && npm test
+   用法：仓库根执行 pnpm test（或在 web/ 里 pnpm test）
    ========================================================================== */
 'use strict';
 

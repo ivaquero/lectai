@@ -2,7 +2,9 @@
 # 后端是 Python（uv 管理），不进这个 workspace。
 packages:
   - web
+  - server
 
-# pnpm 10 起默认不执行依赖的安装脚本，esbuild 必须放行才能装好二进制。
-onlyBuiltDependencies:
-  - esbuild
+# pnpm 10 起默认不执行依赖的安装脚本，esbuild 必须放行才能装好平台二进制。
+# 键名是 allowBuilds（pnpm 12 起 onlyBuiltDependencies 已不再被读取）。
+allowBuilds:
+  esbuild: true

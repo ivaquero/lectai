@@ -14,7 +14,7 @@
    golden 过期后就重导（改了 algo/ 或 OPS 之后必须做）：
      cd backend && uv run python tools/export_golden.py
 
-   运行：cd web && npm run test:parity （不需要后端在跑）
+   运行：仓库根 pnpm test:parity （不需要后端在跑）
    ========================================================================== */
 'use strict';
 

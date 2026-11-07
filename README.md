@@ -2,7 +2,7 @@
 
 面向 408 / 数据结构课程的本地学习站点：**算法在后端跑，前端只做纯播放器**——每一步都对应一行 C 代码、一条中文解说、一份结点快照，可暂停、单步、回退。
 
-无数据库、无外部服务：Python 3.14 + FastAPI + 原生 ES2020 + SVG；Python 版本与依赖都用 [uv](https://docs.astral.sh/uv/) 管理（`backend/.python-version` 固定 3.14）。前端源码仍是原生 ES2020、由后端直接托管即可运行（改完刷新即可，不需要安装任何 JS 依赖）；`web/` 另带一条**可选**的 Vite 构建链，只用于产出发布物。
+无数据库、无外部服务：Python 3.14 + FastAPI + 原生 ES2020 + SVG；Python 版本与依赖都用 [uv](https://docs.astral.sh/uv/) 管理（`backend/.python-version` 固定 3.14）。前端源码是原生 ES2020，后端直接托管即可运行；`web/` 另带一条**可选**的 Vite 构建链，只用于产出发布物。JS 侧依赖统一由 **pnpm** 管理（仓库根 `pnpm-workspace.yaml`，成员只有 `web`），锁文件是根目录的 `pnpm-lock.yaml`，pnpm 版本由 `package.json` 的 `packageManager` 固定为 12.18.0——不要再用 npm / yarn 装依赖。
 
 **离线可用**：后端不可达时自动降级——题库 / 答疑 / 统计走本地快照，链表 / 栈 / 队列的逐步可视化走 `web/src/engine/` 的 TS 引擎（Python 实现的逐字节镜像，由 golden 快照把关）。
 
@@ -27,13 +27,15 @@ node web/tests/offline.test.js                # 离线自动降级(本地判题/
 node web/tests/offline-engine.test.js         # 离线轨迹的 REST 适配层 ↔ golden 逐字段比对（不需要后端）
 ```
 
-前端测试也可一次跑完（含引擎对齐基线；需先在 `web/` 里 `npm install` 一次）：
+前端测试也可一次跑完（含引擎对齐基线；JS 依赖由 **pnpm** 管理，先在仓库根 `pnpm install` 一次）：
 
 ```bash
-cd web
-npm test                # 全部套件：parity + offline-engine + list-page + quiz-ai + offline + visual-stackqueue
-npm run test:parity     # 只跑「TS 引擎 ↔ Python 引擎」逐字段比对（不需要后端）
-npm run typecheck       # 引擎与契约类型的静态检查
+pnpm install            # 仓库根；pnpm 版本由 package.json 的 packageManager 固定（12.18.0）
+pnpm test               # 全部套件：sw + parity + offline-engine + list-page + quiz-ai + offline + visual-stackqueue
+pnpm test:parity        # 只跑「TS 引擎 ↔ Python 引擎」逐字段比对（不需要后端）
+pnpm typecheck          # 引擎与契约类型的静态检查
+pnpm build              # 逐页构建到 web/dist（含 sw.js）
+pnpm dev                # Vite dev server，/api 反代到 8000
 ```
 
 ## 目录结构
@@ -77,7 +79,7 @@ lectai/
   - 题库类（`/api/health`、`/api/quiz/*`、`/api/ai/ask`）走本地快照 `core/offline-data.js`（由 `backend/tools/gen_offline_data.py` 从 `data/questions.json`+`data/kb.json` 生成），应答与线上完全同形，取题、判题、解析、答疑、首页指标均可用；
   - 轨迹类（`/api/linkedlist|stack|queue/trace/*` 与 `/ops`）走本地引擎 `web/src/engine/offline.ts`，**链表 / 栈 / 队列的逐步可视化在断网时照常演示**，含单步、回退、C 代码高亮。
   页面顶部挂「离线模式已启用」信息横幅并保留启动命令与重试。**线上取题接口依旧不返回答案**（答案只存在于离线段，供本地测试），防作弊原则不变。
-- **算法权威只有一份（Python）**：`algo/*_trace.py` 是唯一权威实现，语义不在此之外独立演进。`web/src/engine/` 是它的**逐行 TS 镜像**（纯计算、无 DOM，浏览器与 Node 共用），由 `web/tests/scenarios/trace-cases.json` 这一份脚本同时喂给两端，再用 `backend/tools/export_golden.py` 从 Python 导出的 golden 快照逐字段比对（36 个场景 / 569 个快照，含 10 个错误用例）。改完 `algo/` 必须重导 golden，否则 `npm run test:parity` 立刻报红——这就是防漂移的机制，而不是靠自觉。
+- **算法权威只有一份（Python）**：`algo/*_trace.py` 是唯一权威实现，语义不在此之外独立演进。`web/src/engine/` 是它的**逐行 TS 镜像**（纯计算、无 DOM，浏览器与 Node 共用），由 `web/tests/scenarios/trace-cases.json` 这一份脚本同时喂给两端，再用 `backend/tools/export_golden.py` 从 Python 导出的 golden 快照逐字段比对（36 个场景 / 569 个快照，含 10 个错误用例）。改完 `algo/` 必须重导 golden，否则 `pnpm test:parity` 立刻报红——这就是防漂移的机制，而不是靠自觉。
 - **离线状态的交接**：在线期间 `api.js` 把后端每次应答里的容器值记到 `offline.js`（仅内存，不触发任何下载）；探测到离线时才 `import()` 引擎 chunk（约 25KB，独立分包），并把最近一次后端状态灌进本地容器，断网那一刻画布不会重置成空表。本地容器只存值序列，写 `sessionStorage`，所以离线刷新、切 `#stack` / `#queue` 这些整页重载都不丢状态。**已知差异**：本地容器没有服务端的历史轨迹（回放从当前离线后的操作开始）。
 - **两道验收关**：`tests/parity.test.js` 验「引擎函数 = Python 函数」；`tests/offline-engine.test.js` 验「REST 路径 + 请求体 → 引擎 → 载荷 = Python 载荷」（同一批 golden，覆盖 `/ops`、`/trace/state`、全部 12 个操作、错误外壳与持久化）。
 - **加操作的改动面**：`algo/*.py` 的 `OPS` + `op_*` → 重导 golden → 同步 `web/src/engine/` 镜像 → 前端 `pages/list/ops.js`。四步中漏掉重导，parity 会指着具体字段路径告诉你差在哪。
@@ -123,7 +125,7 @@ lectai/
 
 ## 前端要点
 
-- **脚本加载**：每页只有一个 `<script type="module">` 入口（`assets/js/entries/<page>.js`），入口内按原顺序做副作用导入——顺序即依赖顺序。**代价**：ES module 受 CORS 约束，不能再双击 HTML 用 `file://` 打开；照常由后端托管（`http://127.0.0.1:8000/`）即可，或 `cd web && npm run dev`（dev 把 `/api` 反代到 8000）、`npx vite preview`。
+- **脚本加载**：每页只有一个 `<script type="module">` 入口（`assets/js/entries/<page>.js`），入口内按原顺序做副作用导入——顺序即依赖顺序。**代价**：ES module 受 CORS 约束，不能再双击 HTML 用 `file://` 打开；照常由后端托管（`http://127.0.0.1:8000/`）即可，或仓库根 `pnpm dev`（dev 把 `/api` 反代到 8000）、`pnpm preview`。
 - **离线开关**：页面用 `<body data-offline-snapshot>`（题库快照）与 `data-offline-trace`（本地轨迹引擎）声明支持的降级类型；两块资源都是按需 `import()` 的独立 chunk（75KB / 25KB），在线时一个字节都不下载。新增可视化页时两件事要做：入口里 `import '../core/offline.js'`，body 上标 `data-offline-trace`。
 - **响应式断点**：≥1080px 双栏（stage + 348px side）；760–1080px 单栏、统计 chip 2×2；<760px 导航折行横滚、C 代码收成抽屉、答题卡移到题下。
 - **无障碍**：Tab 首下即「跳到主要内容」；播放 / 单步是真 `<button>` 带 `aria-label`；画布 `<svg role="img">` 每步更新 `<title>`；高亮不只看颜色（待删斜线 + 虚线、比较描边）；尊重 `prefers-reduced-motion`。

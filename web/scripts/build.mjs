@@ -14,7 +14,7 @@
    （offline-data 快照，75KB）仍是独立 chunk、保持按需加载。执行顺序由 ESM 语义
    保证，不再依赖标签顺序。
 
-   用法：npm run build
+   用法：仓库根执行 pnpm build（web 是本仓库 pnpm workspace 的唯一成员）
    ========================================================================== */
 
 import { rm, writeFile } from 'node:fs/promises';

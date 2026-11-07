@@ -1,0 +1,25 @@
+{
+  "name": "@lectai/server",
+  "version": "1.2.0",
+  "private": true,
+  "type": "module",
+  "description": "数据结构学习平台后端（Node + Fastify），轨迹引擎与前端共用 web/src/engine",
+  "main": "dist/server.mjs",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "start": "node dist/server.mjs",
+    "dev": "node scripts/build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "test:http-parity": "node tests/http-parity.test.js"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.4.1",
+    "@fastify/static": "^10.1.10",
+    "fastify": "^5.12.8"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "esbuild": "^0.25.12",
+    "typescript": "^5.9.3"
+  }
+}
