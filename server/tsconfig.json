@@ -14,5 +14,5 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts", "../web/engine/**/*.ts"]
+  "include": ["*.ts", "tests/**/*.ts", "../web/engine/**/*.ts"]
 }

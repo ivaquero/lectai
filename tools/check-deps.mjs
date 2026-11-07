@@ -42,7 +42,8 @@ const MEMBERS = [
   {
     name: '@lectai/server',
     dir: join(ROOT, 'server'),
-    scan: ['src', 'tests', 'build.mjs']
+    /* 源文件与 build.mjs / package.json 同级（没有 src/ 中间层），按扩展名登记根级 .ts */
+    scan: ['*.ts', 'tests', 'build.mjs']
   }
 ];
 
@@ -60,6 +61,21 @@ const PATTERNS = [
 ];
 
 function walk(target, out) {
+  /* '*.ts' 这种简单通配：只取该目录下同扩展名的文件。
+     有了它，扁平化后的根级源文件能按扩展名登记，不必逐个列名字——
+     而「列了不存在的路径」是静默失败：walk 直接 return，护栏就此空转。 */
+  if (target.includes('*')) {
+    const dir = dirname(target);
+    const suffix = target.slice(target.lastIndexOf('*') + 1);
+    try {
+      for (const entry of readdirSync(dir)) {
+        if (entry.endsWith(suffix) && SOURCE_EXT.test(entry)) out.push(join(dir, entry));
+      }
+    } catch {
+      // 目录不存在，同上不算错
+    }
+    return out;
+  }
   let st;
   try {
     st = statSync(target);

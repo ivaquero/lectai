@@ -9,7 +9,7 @@
 pnpm install              # 仓库根
 pnpm server:build         # esbuild → dist/server/server.mjs（仓库根；引擎内联，依赖 external）
 pnpm server               # 启动，默认 127.0.0.1:8000
-pnpm server:dev           # 监听 src/ 改动，重建后自动重启
+pnpm server:dev           # 监听 .ts 改动，重建后自动重启
 pnpm test:http-contract   # 起一个全新进程，按固定顺序回放 HTTP 契约快照
 pnpm --filter @lectai/server test:record   # 有意改契约后重录快照（见下文）
 pnpm typecheck            # pnpm -r，前端与服务端一起检查
@@ -33,7 +33,7 @@ pnpm typecheck            # pnpm -r，前端与服务端一起检查
 ## 结构
 
 ```text
-src/
+server/
 ├── engine.ts        与 web/engine 的唯一耦合点（export * 转出）
 ├── env.ts           路径与配置；按 import.meta.url 定位，不依赖 cwd
 ├── http.ts          {code,msg,data} 外壳 + 参数校验（422 也套同一外壳）
@@ -66,7 +66,7 @@ src/
 `app.setErrorHandler` / `setNotFoundHandler` 必须在 `register(...)` **之前**调用，
 并且装配期间不要 `await app.register(...)`：await 会触发 `ready()`，之后再设的
 处理器被静默忽略，表现为参数校验虽然还是 422，但外壳退回 Fastify 默认的
-`{statusCode,error,message}`。实测记录见 `src/app.ts` 文件头。
+`{statusCode,error,message}`。实测记录见 `app.ts` 文件头。
 
 ## 已知边界
 

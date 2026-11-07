@@ -25,7 +25,7 @@ const OUT = resolve(ROOT, '..', 'dist', 'server', 'server.mjs');
 const watch = process.argv.includes('--watch');
 
 const options = {
-  entryPoints: [resolve(ROOT, 'src', 'main.ts')],
+  entryPoints: [resolve(ROOT, 'main.ts')],
   outfile: OUT,
   bundle: true,
   platform: 'node',
@@ -83,4 +83,4 @@ const ctx = await esbuild.context({
 });
 
 await ctx.watch();
-console.log('[dev] 监听 src/ 改动，重建后自动重启');
+console.log('[dev] 监听 .ts 改动，重建后自动重启');

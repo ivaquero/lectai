@@ -5,7 +5,7 @@
    前端只认 REST。断网后要把同一批接口无缝接过来，缺的不是算法（engine/ 已有），
    而是「路径 → 调用」的映射、会话容器、以及应答外壳。
 
-   应答外壳与 server/src/http.ts 逐字段一致：
+   应答外壳与 server/http.ts 逐字段一致：
      · 成功  {ok:true,  data:<载荷>, msg:'ok'}      —— 载荷形状与线上 ok() 完全一致
      · 业务错 {ok:false, data:null, msg:<文案>}     —— 栈空 / 越界等，对应线上的 err()
 
