@@ -13,6 +13,8 @@ const { JSDOM, VirtualConsole } = require('jsdom');
 const fs = require('fs');
 const path = require('path');
 
+const harness = require('./_harness.js');
+
 const BASE = 'http://127.0.0.1:8000';
 const HTML = path.join(__dirname, '..', 'list.html');
 
@@ -74,6 +76,9 @@ async function main() {
   win.requestAnimationFrame = (fn) => setTimeout(() => fn(performance.now()), 16);
   win.cancelAnimationFrame = (id) => clearTimeout(id);
 
+  /* jsdom 不执行 type="module"，改由 esbuild 打成经典 IIFE 注入（见 _harness.js） */
+  await harness.injectPage(win, 'list.html');
+
   await new Promise((r) => {
     if (doc.readyState === 'complete') r();
     else win.addEventListener('load', r);
@@ -91,6 +96,10 @@ async function main() {
   const hasSvg = await waitFor(() => !!doc.querySelector('#canvas-wrap svg'));
   ok(hasSvg, '首屏画出了链表 SVG');
 
+  /* 初始序列由页面挂载后异步 POST /trace/build 载入（见 pages/list/index.js 的
+     defaults: '3,1,4,1,5'）。此处必须等它落定再断言，否则与网络响应赛跑 ——
+     Vite 化前该套件固定有 8 项失败，根因就是这里少了一次等待。 */
+  await waitFor(() => doc.querySelectorAll('#canvas-wrap .nd').length === 5);
   const nodeCount = doc.querySelectorAll('#canvas-wrap .nd').length;
   ok(nodeCount === 5, '默认序列 5 个结点（实际 ' + nodeCount + '）');
 

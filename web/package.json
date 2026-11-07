@@ -1,0 +1,20 @@
+{
+  "name": "lectai-web",
+  "version": "1.2.0",
+  "private": true,
+  "description": "数据结构学习平台前端：原生 ES2020 源码 + Vite 构建链（多页）",
+  "scripts": {
+    "dev": "vite",
+    "build": "node scripts/build.mjs",
+    "preview": "vite preview --port 4173",
+    "test": "node tests/run-all.cjs",
+    "test:parity": "node tests/parity.test.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "jsdom": "^26.0.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.0.0"
+  }
+}

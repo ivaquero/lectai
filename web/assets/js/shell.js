@@ -42,6 +42,12 @@
         '后端已连接',
         'FastAPI 已连接 · ' + (b.base || location.origin) + ' · 题库 ' + total + ' 题'
       );
+    } else if (window.DS.offline && window.DS.offline.traceAvailable()) {
+      setBadge(
+        'offline',
+        '离线 · 本地引擎',
+        '未连接到 ' + b.origin + '；链表 / 栈 / 队列的轨迹改由本地引擎生成'
+      );
     } else {
       setBadge('offline', '离线模式', '未连接到 ' + b.origin + '，请启动后端后重试');
     }
@@ -83,13 +89,16 @@
       box.insertBefore(el, box.firstChild);
     }
 
-    const offlineCapable = window.DS.offline && window.DS.offline.available();
-    if (offlineCapable) {
+    const snap = window.DS.offline && window.DS.offline.available();
+    const trace = window.DS.offline && window.DS.offline.traceAvailable();
+    if (snap || trace) {
+      const parts = [];
+      if (snap) parts.push('刷题、判题、解析、答疑、首页统计改走本地快照');
+      if (trace) parts.push('链表 / 栈 / 队列的逐步可视化改由本地引擎生成（与后端逐字节对齐）');
       el.className = 'offline-banner info';
       el.innerHTML =
         '<b>离线模式已启用</b>' +
-        '<span>后端未连接，本页已自动切换到本地快照：刷题、判题、解析、答疑、首页统计均可离线使用；' +
-        '仅链表 / 栈 / 队列的逐步可视化需要后端。要启用可视化，在 <code>backend</code> 目录执行 ' +
+        '<span>后端未连接，' + parts.join('；') + '。要恢复后端：在 <code>backend</code> 目录执行 ' +
         '<code>uvicorn main:app --port 8000</code> 后点重试。</span>' +
         '<button class="btn" type="button" id="banner-retry">重试</button>';
     } else {

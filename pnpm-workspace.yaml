@@ -1,0 +1,8 @@
+# JS 侧的包管理器只认 pnpm：锁文件在仓库根，成员目前只有 web。
+# 后端是 Python（uv 管理），不进这个 workspace。
+packages:
+  - web
+
+# pnpm 10 起默认不执行依赖的安装脚本，esbuild 必须放行才能装好二进制。
+onlyBuiltDependencies:
+  - esbuild

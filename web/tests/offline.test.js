@@ -14,6 +14,8 @@ const { JSDOM, VirtualConsole } = require('jsdom');
 const fs = require('fs');
 const path = require('path');
 
+const harness = require('./_harness.js');
+
 const BASE = 'http://127.0.0.1:8000';
 
 let passed = 0;
@@ -55,6 +57,9 @@ async function open(page) {
   win.requestAnimationFrame = (fn) => setTimeout(() => fn(Date.now()), 16);
   win.cancelAnimationFrame = (id) => clearTimeout(id);
 
+  /* jsdom 不执行 type="module"，改由 esbuild 打成经典 IIFE 注入（见 _harness.js） */
+  await harness.injectPage(win, page);
+
   await new Promise((r) => {
     if (doc.readyState === 'complete') r();
     else win.addEventListener('load', r);
@@ -65,21 +70,55 @@ async function open(page) {
 async function main() {
 
   /* ------------------------------ 链表页 ------------------------------ */
-  section('链表页 · 离线降级');
+  section('链表页 · 离线本地引擎');
   {
-    const { doc, dom } = await open('list.html');
+    const { win, doc, dom } = await open('list.html');
     const got = await waitFor(() => doc.querySelector('#offline-banner'));
     ok(!!got, '顶部出现离线横幅');
 
     const banner = doc.querySelector('#offline-banner');
-    ok(!!banner && banner.textContent.indexOf('uvicorn') >= 0, '横幅给出了启动命令');
+    ok(!!banner && /离线模式已启用/.test(banner.textContent), '横幅切到「离线模式已启用」（信息态）');
+    ok(!!banner && /本地引擎/.test(banner.textContent), '横幅说明可视化已由本地引擎接管');
     ok(!!banner && !!doc.querySelector('#banner-retry'), '横幅带重试按钮');
     ok(!!banner && banner.getAttribute('role') === 'status', '横幅 role=status（读屏可播报）');
 
-    const canvas = doc.querySelector('#canvas-wrap');
-    ok(canvas && canvas.textContent.indexOf('后端未连接') >= 0, '画布区给出离线说明');
-    ok(doc.querySelector('#btn-run').disabled === true, '「执行」按钮被禁用');
-    ok(doc.querySelector('#btn-reset').disabled === true, '「重置」按钮被禁用');
+    /* 本地引擎接管后，首屏默认序列由本地生成，按钮不再禁用 */
+    const booted = await waitFor(() => doc.querySelectorAll('#canvas-wrap .nd').length === 5);
+    ok(booted, '首屏 5 个结点由本地引擎生成');
+    ok(doc.querySelector('#btn-run').disabled === false, '「执行」按钮可用（离线不再禁用）');
+    ok(doc.querySelector('#btn-reset').disabled === false, '「重置」按钮可用');
+
+    /* 真实执行：头插 9 → 6 个结点 */
+    const tab = Array.from(doc.querySelectorAll('#op-tabs .tab')).find((t) => t.dataset.op === 'insert-head');
+    tab.click();
+    doc.querySelector('#f-value').value = '9';
+    const runAttr = () => doc.querySelector('#canvas-wrap').getAttribute('data-trace-run') || '0';
+    const prev = runAttr();
+    doc.querySelector('#btn-run').click();
+    const ran = await waitFor(() => runAttr() !== prev, 8000);
+    ok(ran, '离线执行头插返回轨迹（本地引擎）');
+    await waitFor(() => doc.querySelectorAll('#canvas-wrap .nd').length === 6);
+    ok(doc.querySelectorAll('#canvas-wrap .nd').length === 6, '头插后 6 个结点');
+
+    /* 业务错误仍走 err()：位序越界 → danger toast，而不是静默降级 */
+    const del = Array.from(doc.querySelectorAll('#op-tabs .tab')).find((t) => t.dataset.op === 'delete-pos');
+    del.click();
+    doc.querySelector('#f-pos').value = '99';
+    doc.querySelector('#btn-run').click();
+    const toasted = await waitFor(() => !!doc.querySelector('.toast.danger'), 4000);
+    ok(toasted, '越界位序触发 danger toast（本地引擎的 err 语义与后端一致）');
+
+    /* 在线 → 离线的状态交接：remember() 从后端应答里取容器值，seed 进本地容器，
+       断网那一刻画布不会重置成空表。这里直接喂一份后端载荷验证提取链路。 */
+    win.DS.offline.remember('/api/linkedlist/trace/build', {
+      trace: [
+        { nodes: [{ id: 'x1', value: 7, label: 'a1' }] },
+        { nodes: [{ id: 'x1', value: 7, label: 'a1' }, { id: 'x2', value: 8, label: 'a2' }] }
+      ]
+    });
+    const st = win.DS.offline.handle('GET', '/api/linkedlist/trace/state');
+    ok(!!st && st.ok && st.data.length === 2, 'remember→seed 接管了后端最后状态（2 结点）');
+    ok(JSON.stringify(st.data.nodes.map((n) => n.value)) === '[7,8]', '交接后的值序列为 [7,8]');
 
     section('链表页 · 无障碍');
     const skip = doc.querySelector('.skip-link');

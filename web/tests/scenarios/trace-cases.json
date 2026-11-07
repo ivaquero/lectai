@@ -1,0 +1,163 @@
+{
+  "$comment": "轨迹引擎移植的共用场景脚本。Python 侧 tools/export_golden.py 用它导出 golden，TS 侧 tests/parity.test.js 用它重放并逐字节比对。两端读同一份，避免脚本本身漂移。op 取值与各 *_trace.py 的函数后缀一致：build / insert-head / insert-tail / delete-pos / delete-value / search / traverse / push / pop / peek / enqueue / dequeue。",
+  "cases": [
+    { "name": "list-build-basic", "container": "list", "steps": [{ "op": "build", "values": [3, 1, 4, 1, 5] }] },
+    { "name": "list-build-empty", "container": "list", "steps": [{ "op": "build", "values": [] }] },
+    {
+      "name": "list-build-max",
+      "container": "list",
+      "steps": [{ "op": "build", "values": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] }]
+    },
+    {
+      "name": "list-build-overflow",
+      "container": "list",
+      "steps": [{ "op": "build", "values": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] }]
+    },
+    {
+      "name": "list-insert-head",
+      "container": "list",
+      "steps": [{ "op": "build", "values": [2, 3] }, { "op": "insert-head", "value": 9 }]
+    },
+    { "name": "list-insert-head-empty", "container": "list", "steps": [{ "op": "insert-head", "value": 5 }] },
+    {
+      "name": "list-insert-tail",
+      "container": "list",
+      "steps": [{ "op": "build", "values": [2, 3] }, { "op": "insert-tail", "value": 9 }]
+    },
+    { "name": "list-insert-tail-empty", "container": "list", "steps": [{ "op": "insert-tail", "value": 6 }] },
+    {
+      "name": "list-delete-pos-first",
+      "container": "list",
+      "steps": [{ "op": "build", "values": [1, 2, 3] }, { "op": "delete-pos", "pos": 1 }]
+    },
+    {
+      "name": "list-delete-pos-mid",
+      "container": "list",
+      "steps": [{ "op": "build", "values": [1, 2, 3, 4] }, { "op": "delete-pos", "pos": 2 }]
+    },
+    {
+      "name": "list-delete-pos-last",
+      "container": "list",
+      "steps": [{ "op": "build", "values": [1, 2, 3] }, { "op": "delete-pos", "pos": 3 }]
+    },
+    {
+      "name": "list-delete-pos-oob",
+      "container": "list",
+      "steps": [{ "op": "build", "values": [1, 2] }, { "op": "delete-pos", "pos": 5 }]
+    },
+    {
+      "name": "list-delete-value-head",
+      "container": "list",
+      "steps": [{ "op": "build", "values": [7, 8, 9] }, { "op": "delete-value", "value": 7 }]
+    },
+    {
+      "name": "list-delete-value-mid",
+      "container": "list",
+      "steps": [{ "op": "build", "values": [7, 8, 9] }, { "op": "delete-value", "value": 8 }]
+    },
+    {
+      "name": "list-delete-value-missing",
+      "container": "list",
+      "steps": [{ "op": "build", "values": [7, 8] }, { "op": "delete-value", "value": 5 }]
+    },
+    {
+      "name": "list-search-found",
+      "container": "list",
+      "steps": [{ "op": "build", "values": [4, 5, 6] }, { "op": "search", "value": 5 }]
+    },
+    {
+      "name": "list-search-missing",
+      "container": "list",
+      "steps": [{ "op": "build", "values": [4, 5] }, { "op": "search", "value": 9 }]
+    },
+    {
+      "name": "list-traverse",
+      "container": "list",
+      "steps": [{ "op": "build", "values": [1, 2, 3] }, { "op": "traverse" }]
+    },
+    { "name": "list-traverse-empty", "container": "list", "steps": [{ "op": "traverse" }] },
+    {
+      "name": "list-capacity-then-insert",
+      "container": "list",
+      "steps": [
+        { "op": "build", "values": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
+        { "op": "insert-head", "value": 99 }
+      ]
+    },
+    {
+      "name": "list-mixed-session",
+      "container": "list",
+      "steps": [
+        { "op": "build", "values": [1, 2, 3] },
+        { "op": "insert-head", "value": 0 },
+        { "op": "insert-tail", "value": 4 },
+        { "op": "delete-pos", "pos": 2 },
+        { "op": "delete-value", "value": 4 },
+        { "op": "search", "value": 3 },
+        { "op": "traverse" }
+      ]
+    },
+    { "name": "stack-build", "container": "stack", "steps": [{ "op": "build", "values": [1, 2, 3] }] },
+    {
+      "name": "stack-push-pop",
+      "container": "stack",
+      "steps": [
+        { "op": "build", "values": [1, 2] },
+        { "op": "push", "value": 3 },
+        { "op": "push", "value": 4 },
+        { "op": "pop" },
+        { "op": "pop" }
+      ]
+    },
+    {
+      "name": "stack-peek-traverse",
+      "container": "stack",
+      "steps": [{ "op": "build", "values": [5, 6] }, { "op": "peek" }, { "op": "traverse" }]
+    },
+    { "name": "stack-pop-empty", "container": "stack", "steps": [{ "op": "pop" }] },
+    { "name": "stack-peek-empty", "container": "stack", "steps": [{ "op": "peek" }] },
+    {
+      "name": "stack-capacity",
+      "container": "stack",
+      "steps": [{ "op": "build", "values": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] }, { "op": "push", "value": 11 }]
+    },
+    { "name": "stack-traverse-empty", "container": "stack", "steps": [{ "op": "traverse" }] },
+    { "name": "queue-build", "container": "queue", "steps": [{ "op": "build", "values": [1, 2, 3] }] },
+    {
+      "name": "queue-enqueue-dequeue",
+      "container": "queue",
+      "steps": [
+        { "op": "build", "values": [1, 2] },
+        { "op": "enqueue", "value": 3 },
+        { "op": "dequeue" },
+        { "op": "dequeue" }
+      ]
+    },
+    {
+      "name": "queue-peek-traverse",
+      "container": "queue",
+      "steps": [{ "op": "build", "values": [5, 6] }, { "op": "peek" }, { "op": "traverse" }]
+    },
+    { "name": "queue-dequeue-empty", "container": "queue", "steps": [{ "op": "dequeue" }] },
+    { "name": "queue-peek-empty", "container": "queue", "steps": [{ "op": "peek" }] },
+    {
+      "name": "queue-capacity",
+      "container": "queue",
+      "steps": [{ "op": "build", "values": [1, 2, 3, 4, 5, 6, 7, 8, 9] }, { "op": "enqueue", "value": 10 }]
+    },
+    { "name": "queue-traverse-empty", "container": "queue", "steps": [{ "op": "traverse" }] },
+    {
+      "name": "queue-wrap-around",
+      "container": "queue",
+      "steps": [
+        { "op": "build", "values": [1, 2, 3, 4, 5] },
+        { "op": "dequeue" },
+        { "op": "dequeue" },
+        { "op": "dequeue" },
+        { "op": "enqueue", "value": 6 },
+        { "op": "enqueue", "value": 7 },
+        { "op": "traverse" }
+      ]
+    }
+  ]
+}

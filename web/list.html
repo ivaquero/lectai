@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="assets/css/components.css">
 <link rel="stylesheet" href="assets/css/pages/list.css">
 </head>
-<body data-page="list">
+<body data-page="list" data-offline-trace>
 
 <header class="topbar">
   <div class="topbar-inner">
@@ -162,16 +162,8 @@
   <span>&copy; <span id="foot-year">2026</span></span>
 </footer>
 
-<script src="assets/js/core/dom.js"></script>
-<script src="assets/js/core/sanitize.js"></script>
-<script src="assets/js/core/toast.js"></script>
-<script src="assets/js/core/parse.js"></script>
-<script src="assets/js/core/api.js"></script>
-<script src="assets/js/core/keys.js"></script>
-<script src="assets/js/core/trace.js"></script>
-<script src="assets/js/shell.js"></script>
-<script src="assets/js/pages/list/render.js"></script>
-<script src="assets/js/pages/list/ops.js"></script>
-<script src="assets/js/pages/list/index.js"></script>
+<!-- 单入口（Vite 多页构建）：原先 11 条 <script> 的依赖顺序收敛到 -->
+<!-- assets/js/entries/list.js，顺序即依赖顺序，改动请改入口文件。 -->
+<script type="module" src="assets/js/entries/list.js"></script>
 </body>
 </html>

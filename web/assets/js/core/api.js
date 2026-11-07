@@ -4,20 +4,35 @@
    ★ 唯一需要改地址的地方：API_ORIGIN ★
 
    1) 由后端托管前端（推荐）：打开 http://127.0.0.1:8000 → 同源，走相对路径
-   2) 前端单独打开（file:// 或别的端口）→ 走 API_ORIGIN 绝对地址，后端已开 CORS
+   2) 前端单独起静态服务（如 5500 端口 / vite dev）→ 走 API_ORIGIN 绝对地址
    3) 后端没起 → 请求失败返回 {ok:false, offline:true}，由调用方决定降级
+   注意：页面入口是 ES module，无法用 file:// 双击打开（module 受 CORS 约束）。
    ========================================================================== */
 (function () {
   'use strict';
 
   const DS = (window.DS = window.DS || {});
 
-  const API_ORIGIN = 'http://127.0.0.1:8000';
+  /* ★ 地址解析（Vite 化后新增，非 Vite 环境下与原先完全等价）★
+     优先级：
+       1) window.DS_API_ORIGIN —— 运行时注入。静态站与 API 分开发布时，
+          在 HTML 里写一行 <script>window.DS_API_ORIGIN='https://api.xxx'</script>，
+          不用重新构建产物。
+       2) import.meta.env.VITE_API_ORIGIN —— 构建期注入（.env / 环境变量）。
+       3) 默认 http://127.0.0.1:8000 —— 与改造前一致。
+     dev 阶段 Vite 把 /api 反代到后端（见 vite.config.mjs），此时 ENV.DEV 为真，
+     直接走相对路径，因此不依赖后端 CORS 白名单扩容（后端保持零改动）。 */
+  const ENV = import.meta.env || {};
+  const API_ORIGIN =
+    (typeof window !== 'undefined' && window.DS_API_ORIGIN) ||
+    ENV.VITE_API_ORIGIN ||
+    'http://127.0.0.1:8000';
+
   const sameOrigin =
     (location.protocol === 'http:' || location.protocol === 'https:') &&
     location.port === String(new URL(API_ORIGIN).port);
 
-  const API_BASE = sameOrigin ? '' : API_ORIGIN;
+  const API_BASE = sameOrigin || ENV.DEV ? '' : API_ORIGIN;
 
   /**
    * 超时阈值分级（P-010）：不同接口对延迟容忍度不同，集中一处便于调整。
@@ -84,8 +99,9 @@
   async function request(path, opt) {
     const o = opt || {};
     const method = o.method || 'GET';
-    // ★ 自动降级：后端已判定不可达且本路径可离线应答 → 直接返回本地快照，不发请求。
-    if (DS.offline && DS.offline.active && DS.offline.available()) {
+    // ★ 自动降级：后端已判定不可达 → 先问本地应答器（题库快照 / 轨迹引擎），
+    // 不接管（返回 null）才发请求。
+    if (DS.offline && DS.offline.active) {
       const local = DS.offline.handle(method, path, o.body);
       if (local) return local;
     }
@@ -106,9 +122,10 @@
     } catch (e) {
       clearTimeout(timer);
       backend.online = false;
-      // ★ 自动降级：连接失败 / 超时那一刻，尝试用本地快照应答本页所需接口。
-      if (DS.offline && DS.offline.available()) {
-        const local = DS.offline.handle(method, path, o.body);
+      // ★ 自动降级：连接失败 / 超时那一刻，再尝试本地应答。serve() 会按路径
+      // 加载所需的 chunk（轨迹引擎 / 题库快照），所以这里必须 await。
+      if (DS.offline) {
+        const local = await DS.offline.serve(method, path, o.body);
         if (local) { DS.offline.enable(); return local; }
       }
       if (timedOut) {
@@ -147,6 +164,8 @@
     }
     backend.online = true;
     if (json.code !== 0) return { ok: false, data: null, msg: json.msg || '操作失败' };
+    // 记下后端给出的容器状态，供断网后本地引擎接着演（不触发任何下载）
+    if (DS.offline) DS.offline.remember(path, json.data);
     return { ok: true, data: json.data, msg: json.msg || 'ok' };
   }
 
@@ -180,17 +199,16 @@
         backend.online = false;
         backend.info = null;
       }
-      // 后端不可达 + 本页声明支持离线快照 → 懒加载 offline-data.js 并启用降级。
-      // P-005：不再靠 index/quiz/ai 页无条件同步 <script> 拉 78KB，只有真离线时才注入。
+      // 后端不可达 → 按页面声明准备本地应答器：题库快照（data-offline-snapshot）
+      // 或轨迹引擎（data-offline-trace）。两者都是按需加载，在线时一个字节不拉。
       if (!backend.online && DS.offline) {
-        const docEl = document.documentElement;
-        const capable =
-          (docEl && docEl.hasAttribute('data-offline-snapshot')) ||
-          (document.body && document.body.hasAttribute('data-offline-snapshot'));
-        if (capable && !DS.offline.available()) {
+        if (DS.offline.capable('snapshot') && !DS.offline.available()) {
           try { await DS.offline.loadSnapshot(); } catch (e) { /* 注入失败，保持普通离线态 */ }
         }
-        if (DS.offline.available()) {
+        if (DS.offline.capable('trace') && !DS.offline.traceAvailable()) {
+          try { await DS.offline.ensureTrace(); } catch (e) { /* 同上 */ }
+        }
+        if (DS.offline.available() || DS.offline.traceAvailable()) {
           DS.offline.enable();
           const h = DS.offline.handle('GET', '/api/health');
           if (h && h.ok) backend.info = h.data;

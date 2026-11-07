@@ -1,0 +1,188 @@
+{
+  "list": {
+    "build": {
+      "lines": [
+        "head = NULL;",
+        "s = malloc(...); s->data = x; s->next = NULL;",
+        "tail->next = s;   // 空表时: head = s",
+        "tail = s;"
+      ],
+      "structural": [
+        0
+      ],
+      "title": "尾插法建表"
+    },
+    "delete-pos": {
+      "lines": [
+        "if (pos < 1 || pos > n) error;",
+        "if (pos == 1) { q = head; head = head->next; free(q); return; }",
+        "p = head;",
+        "for (i = 1; i < pos - 1; i++) p = p->next;   // 走到前驱",
+        "q = p->next;",
+        "p->next = q->next;      // 摘链：先接后，再释放",
+        "free(q);"
+      ],
+      "structural": [],
+      "title": "按位序删除"
+    },
+    "delete-value": {
+      "lines": [
+        "prev = NULL;  p = head;",
+        "while (p != NULL && p->data != x) {",
+        "    prev = p;  p = p->next;",
+        "}",
+        "if (p == NULL) return NOT_FOUND;",
+        "if (prev == NULL) head = p->next;",
+        "else prev->next = p->next;",
+        "free(p);"
+      ],
+      "structural": [],
+      "title": "按值删除"
+    },
+    "insert-head": {
+      "lines": [
+        "s = (Node *)malloc(sizeof(Node));",
+        "s->data = x;",
+        "s->next = head;",
+        "head = s;"
+      ],
+      "structural": [],
+      "title": "头插法插入"
+    },
+    "insert-tail": {
+      "lines": [
+        "s = (Node *)malloc(sizeof(Node));",
+        "s->data = x;  s->next = NULL;",
+        "if (head == NULL) { head = s; return; }",
+        "p = head;",
+        "while (p->next != NULL) p = p->next;",
+        "p->next = s;"
+      ],
+      "structural": [],
+      "title": "尾插法插入"
+    },
+    "search": {
+      "lines": [
+        "p = head;  pos = 1;",
+        "while (p != NULL) {",
+        "    if (p->data == x) return pos;",
+        "    p = p->next;  pos++;",
+        "}",
+        "return -1;   // 未找到"
+      ],
+      "structural": [],
+      "title": "按值查找"
+    },
+    "traverse": {
+      "lines": [
+        "p = head;",
+        "while (p != NULL) {",
+        "    visit(p->data);",
+        "    p = p->next;",
+        "}"
+      ],
+      "structural": [],
+      "title": "遍历链表"
+    }
+  },
+  "queue": {
+    "build": {
+      "lines": [
+        "Q.front = Q.rear = 0;                     // 空队",
+        "for each x in 输入序列:",
+        "    Q.data[Q.rear] = x;",
+        "    Q.rear = (Q.rear + 1) % MaxSize;      // 取模成环"
+      ],
+      "structural": [
+        0
+      ],
+      "title": "建队（逐个入队）"
+    },
+    "dequeue": {
+      "lines": [
+        "if (Q.front == Q.rear) return ERROR;       // 队空",
+        "x = Q.data[Q.front];                       // ① 取队头元素",
+        "Q.front = (Q.front + 1) % MaxSize;         // ② 队头指针后移",
+        "return x;"
+      ],
+      "structural": [],
+      "title": "出队 dequeue"
+    },
+    "enqueue": {
+      "lines": [
+        "if ((Q.rear + 1) % MaxSize == Q.front) return ERROR;  // 队满",
+        "Q.data[Q.rear] = x;                        // ① 写入队尾位置",
+        "Q.rear = (Q.rear + 1) % MaxSize;           // ② 队尾指针后移（取模）",
+        "return OK;"
+      ],
+      "structural": [],
+      "title": "入队 enqueue"
+    },
+    "peek": {
+      "lines": [
+        "if (Q.front == Q.rear) return ERROR;       // 队空",
+        "return Q.data[Q.front];                    // 只读，front 不动"
+      ],
+      "structural": [],
+      "title": "读队头 peek"
+    },
+    "traverse": {
+      "lines": [
+        "i = Q.front;",
+        "while (i != Q.rear) { visit(Q.data[i]); i = (i + 1) % MaxSize; }"
+      ],
+      "structural": [],
+      "title": "遍历（队头 → 队尾）"
+    }
+  },
+  "stack": {
+    "build": {
+      "lines": [
+        "S.top = -1;                               // 空栈",
+        "for each x in 输入序列:",
+        "    if (S.top == MaxSize - 1) return ERROR;",
+        "    S.data[++S.top] = x;                  // 指针先加一再写入"
+      ],
+      "structural": [
+        0
+      ],
+      "title": "建栈（逐个入栈）"
+    },
+    "peek": {
+      "lines": [
+        "if (S.top == -1) return ERROR;            // 栈空",
+        "return S.data[S.top];                     // 只读，top 不动"
+      ],
+      "structural": [],
+      "title": "读栈顶 peek"
+    },
+    "pop": {
+      "lines": [
+        "if (S.top == -1) return ERROR;            // 栈空，无法出栈",
+        "x = S.data[S.top];                        // ① 先取栈顶元素",
+        "S.top--;                                  // ② 指针再下移",
+        "return x;"
+      ],
+      "structural": [],
+      "title": "出栈 pop"
+    },
+    "push": {
+      "lines": [
+        "if (S.top == MaxSize - 1) return ERROR;   // 栈满，无法入栈",
+        "S.top++;                                  // ① 栈顶指针先上移",
+        "S.data[S.top] = x;                        // ② 再写入元素",
+        "return OK;"
+      ],
+      "structural": [],
+      "title": "入栈 push"
+    },
+    "traverse": {
+      "lines": [
+        "for (i = S.top; i >= 0; i--)",
+        "    visit(S.data[i]);                     // 从栈顶往栈底"
+      ],
+      "structural": [],
+      "title": "遍历（自栈顶向下）"
+    }
+  }
+}

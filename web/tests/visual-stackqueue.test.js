@@ -13,6 +13,8 @@ const { JSDOM, VirtualConsole } = require('jsdom');
 const fs = require('fs');
 const path = require('path');
 
+const harness = require('./_harness.js');
+
 const BASE = 'http://127.0.0.1:8000';
 const HTML = path.join(__dirname, '..', 'visual.html');
 
@@ -55,6 +57,9 @@ async function open(mod) {
   win.AbortController = AbortController;
   win.requestAnimationFrame = (fn) => setTimeout(() => fn(Date.now()), 16);
   win.cancelAnimationFrame = (id) => clearTimeout(id);
+
+  /* jsdom 不执行 type="module"，改由 esbuild 打成经典 IIFE 注入（见 _harness.js） */
+  await harness.injectPage(win, 'visual.html');
 
   await new Promise((r) => {
     if (doc.readyState === 'complete') r();
@@ -104,7 +109,10 @@ async function main() {
     ok(svg.indexOf('top') >= 0, '画布上有 top 指针');
     ok(svg.indexOf('栈底') >= 0, '画布标出了栈底');
 
-    await waitFor(() => doc.querySelector('#meta-len').textContent !== '–', 5000);
+    /* 容器以空表起步、由挂载后异步 POST /trace/build 填入初始序列（栈/队列都是 3 个），
+       因此要等「等于期望值」而不是「不等于占位符」—— 后者会在 build 落地前就放行，
+       与网络响应赛跑，导致该套件偶发失败。 */
+    await waitFor(() => doc.querySelector('#meta-len').textContent === '3', 5000);
     ok(doc.querySelector('#meta-len').textContent === '3', '首屏栈内有 3 个元素');
 
     section('栈 · 入栈与出栈（LIFO）');
@@ -146,7 +154,10 @@ async function main() {
     ok(svg.indexOf('rear') >= 0, '画布上有 rear 指针');
     ok(svg.indexOf('下一入队位') >= 0, '画布标出了 rear 的写入位置');
 
-    await waitFor(() => doc.querySelector('#meta-len').textContent !== '–', 5000);
+    /* 容器以空表起步、由挂载后异步 POST /trace/build 填入初始序列（栈/队列都是 3 个），
+       因此要等「等于期望值」而不是「不等于占位符」—— 后者会在 build 落地前就放行，
+       与网络响应赛跑，导致该套件偶发失败。 */
+    await waitFor(() => doc.querySelector('#meta-len').textContent === '3', 5000);
     ok(doc.querySelector('#meta-len').textContent === '3', '首屏队列内 3 个元素');
 
     section('队列 · 入队与出队（FIFO）');

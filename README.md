@@ -2,7 +2,9 @@
 
 面向 408 / 数据结构课程的本地学习站点：**算法在后端跑，前端只做纯播放器**——每一步都对应一行 C 代码、一条中文解说、一份结点快照，可暂停、单步、回退。
 
-无数据库、无外部服务、无前端构建：Python 3.14 + FastAPI + 原生 ES2020 + SVG；Python 版本与依赖都用 [uv](https://docs.astral.sh/uv/) 管理（`backend/.python-version` 固定 3.14）。
+无数据库、无外部服务：Python 3.14 + FastAPI + 原生 ES2020 + SVG；Python 版本与依赖都用 [uv](https://docs.astral.sh/uv/) 管理（`backend/.python-version` 固定 3.14）。前端源码仍是原生 ES2020、由后端直接托管即可运行（改完刷新即可，不需要安装任何 JS 依赖）；`web/` 另带一条**可选**的 Vite 构建链，只用于产出发布物。
+
+**离线可用**：后端不可达时自动降级——题库 / 答疑 / 统计走本地快照，链表 / 栈 / 队列的逐步可视化走 `web/src/engine/` 的 TS 引擎（Python 实现的逐字节镜像，由 golden 快照把关）。
 
 ## 快速开始
 
@@ -21,7 +23,17 @@ uv run python tests/test_stackqueue_trace.py  # 栈 / 队列轨迹：10599 项�
 uv run python test_api.py                     # 接口端到端：30 项（需先起服务）
 node web/tests/list-page.test.js              # 前端集成（需 jsdom + 后端已启动）
 node web/tests/quiz-ai.test.js                # 刷题 + 答疑页（需后端已启动）
-node web/tests/offline.test.js                # 离线自动降级(本地判题/答疑)+无障碍（需后端托管静态，测试内 fetch 被置为失败）
+node web/tests/offline.test.js                # 离线自动降级(本地判题/答疑/本地轨迹引擎)+无障碍（需后端托管静态，测试内 fetch 被置为失败）
+node web/tests/offline-engine.test.js         # 离线轨迹的 REST 适配层 ↔ golden 逐字段比对（不需要后端）
+```
+
+前端测试也可一次跑完（含引擎对齐基线；需先在 `web/` 里 `npm install` 一次）：
+
+```bash
+cd web
+npm test                # 全部套件：parity + offline-engine + list-page + quiz-ai + offline + visual-stackqueue
+npm run test:parity     # 只跑「TS 引擎 ↔ Python 引擎」逐字段比对（不需要后端）
+npm run typecheck       # 引擎与契约类型的静态检查
 ```
 
 ## 目录结构
@@ -39,13 +51,19 @@ lectai/
 │   ├── tools/build_questions.py    分章题合并成主库
 │   ├── tools/gen_offline_data.py   生成前端离线快照(改数据后重跑)
 │   └── pyproject.toml / uv.lock    uv 项目定义 + 锁文件
-└── web/                        静态前端（原生 HTML/CSS/JS，无构建）
-    ├── *.html                  首页 / 单链表 / 刷题 / 答疑
+└── web/                        前端：原生 ES2020 源码 + 可选 Vite 构建链
+    ├── *.html                  首页 / 单链表 / 刷题 / 答疑 / 栈队列
+    ├── vite.config.mjs         dev 代理(/api→8000) + 相对 base（产物可部署到子路径）
+    ├── scripts/build.mjs       逐页构建：每页单 chunk，避免共享 chunk 打乱执行顺序
+    ├── src/engine/             ★ 轨迹引擎的 TS 镜像（Python 的逐行移植，纯计算、不碰 DOM）
+    │   └── offline.ts          离线桥：REST 路径 → 本地引擎（容器 / 持久化 / err 外壳）
+    ├── tests/                  集成测试 + scenarios/ 场景脚本 + golden/ 对齐基线
     ├── assets/css/tokens.css        换配色只动这个
     └── assets/js/
+        ├── entries/*.js        每页单入口：按原 <script> 顺序做副作用导入
         ├── core/api.js         后端地址 API_ORIGIN 单点 + fetch 封装 + 自动降级
         ├── core/offline-data.js 本地快照(题含答案/知识库/统计，自动生成勿手改)
-        ├── core/offline.js     离线应答器：复刻 quiz/ai/health 契约
+        ├── core/offline.js     离线应答器：题库快照 + 轨迹本地引擎的调度与按需加载
         ├── core/sanitize.js    后端富文本白名单清洗
         ├── core/trace.js       轨迹播放器（游标单步 / 回退）
         └── pages/list/ops.js   新增链表操作只动这个（tabs 自动生成）
@@ -55,9 +73,14 @@ lectai/
 
 三句话：**算法只有一份**（`algo/*_trace.py`），每个 `op_*()` 返回**整条步骤轨迹**而非最终状态；**前端是纯播放器**（游标前后移动 = 单步 / 回退，无需逆操作）；**会话按 `X-Session-Id` 隔离**，链表 / 栈 / 队列 / 刷题统计共用一个 store。
 
-- **自动离线降级（题库 / 答疑 / 首页统计）**：后端不可达时，`core/api.js` 的 `probe()`/`request()` 自动切到本地快照 `core/offline-data.js`（由 `backend/tools/gen_offline_data.py` 从 `data/questions.json`+`data/kb.json` 生成），经 `core/offline.js` 复刻与线上完全同形的 `/api/health`、`/api/quiz/*`、`/api/ai/ask` 应答——取题、判题、解析、答疑、首页指标均可离线使用，页面顶部挂「离线模式已启用」信息横幅并保留启动命令与重试。**线上取题接口依旧不返回答案**（答案只存在于离线段，供本地测试），防作弊原则不变。
-- **可视化不做离线**：链表 / 栈 / 队列的逐步轨迹依赖后端 `algo/*_trace.py`，刻意不在前端复制一份算法（否则违背「算法只有一份」）；断后端时这三页仍显示「需要后端」并禁用执行按钮。
-- **不做前端算法**：加一个操作只改 `algo/*.py` + `pages/list/ops.js` 两处，杜绝前后端两份实现互相漂移。
+- **自动离线降级（题库 / 答疑 / 首页统计 / 可视化）**：后端不可达时，`core/api.js` 的 `probe()`/`request()` 先把请求交给 `core/offline.js`：
+  - 题库类（`/api/health`、`/api/quiz/*`、`/api/ai/ask`）走本地快照 `core/offline-data.js`（由 `backend/tools/gen_offline_data.py` 从 `data/questions.json`+`data/kb.json` 生成），应答与线上完全同形，取题、判题、解析、答疑、首页指标均可用；
+  - 轨迹类（`/api/linkedlist|stack|queue/trace/*` 与 `/ops`）走本地引擎 `web/src/engine/offline.ts`，**链表 / 栈 / 队列的逐步可视化在断网时照常演示**，含单步、回退、C 代码高亮。
+  页面顶部挂「离线模式已启用」信息横幅并保留启动命令与重试。**线上取题接口依旧不返回答案**（答案只存在于离线段，供本地测试），防作弊原则不变。
+- **算法权威只有一份（Python）**：`algo/*_trace.py` 是唯一权威实现，语义不在此之外独立演进。`web/src/engine/` 是它的**逐行 TS 镜像**（纯计算、无 DOM，浏览器与 Node 共用），由 `web/tests/scenarios/trace-cases.json` 这一份脚本同时喂给两端，再用 `backend/tools/export_golden.py` 从 Python 导出的 golden 快照逐字段比对（36 个场景 / 569 个快照，含 10 个错误用例）。改完 `algo/` 必须重导 golden，否则 `npm run test:parity` 立刻报红——这就是防漂移的机制，而不是靠自觉。
+- **离线状态的交接**：在线期间 `api.js` 把后端每次应答里的容器值记到 `offline.js`（仅内存，不触发任何下载）；探测到离线时才 `import()` 引擎 chunk（约 25KB，独立分包），并把最近一次后端状态灌进本地容器，断网那一刻画布不会重置成空表。本地容器只存值序列，写 `sessionStorage`，所以离线刷新、切 `#stack` / `#queue` 这些整页重载都不丢状态。**已知差异**：本地容器没有服务端的历史轨迹（回放从当前离线后的操作开始）。
+- **两道验收关**：`tests/parity.test.js` 验「引擎函数 = Python 函数」；`tests/offline-engine.test.js` 验「REST 路径 + 请求体 → 引擎 → 载荷 = Python 载荷」（同一批 golden，覆盖 `/ops`、`/trace/state`、全部 12 个操作、错误外壳与持久化）。
+- **加操作的改动面**：`algo/*.py` 的 `OPS` + `op_*` → 重导 golden → 同步 `web/src/engine/` 镜像 → 前端 `pages/list/ops.js`。四步中漏掉重导，parity 会指着具体字段路径告诉你差在哪。
 - **富文本白名单**：`/api/ai/ask`、`/api/quiz/submit` 的 HTML 字段带 `*_content_type`（`trusted_html` / `plain_text`）；只有 `trusted_html` 才经 `DS.sanitize()`（DOMParser + 标签 / 属性 / URL 协议白名单）后走 `innerHTML`，其余一律 `textContent`。
 - **安全**：CORS 走 `ALLOWED_ORIGINS` 白名单且 `allow_credentials=False`；sid 校验 `^[A-Za-z0-9_-]{1,64}$`（非法归 `default`）；会话 TTL 3600s + LRU 上限 10000（`LECTAI_SESSION_TTL/MAX` 可覆盖）。
 
@@ -100,6 +123,8 @@ lectai/
 
 ## 前端要点
 
+- **脚本加载**：每页只有一个 `<script type="module">` 入口（`assets/js/entries/<page>.js`），入口内按原顺序做副作用导入——顺序即依赖顺序。**代价**：ES module 受 CORS 约束，不能再双击 HTML 用 `file://` 打开；照常由后端托管（`http://127.0.0.1:8000/`）即可，或 `cd web && npm run dev`（dev 把 `/api` 反代到 8000）、`npx vite preview`。
+- **离线开关**：页面用 `<body data-offline-snapshot>`（题库快照）与 `data-offline-trace`（本地轨迹引擎）声明支持的降级类型；两块资源都是按需 `import()` 的独立 chunk（75KB / 25KB），在线时一个字节都不下载。新增可视化页时两件事要做：入口里 `import '../core/offline.js'`，body 上标 `data-offline-trace`。
 - **响应式断点**：≥1080px 双栏（stage + 348px side）；760–1080px 单栏、统计 chip 2×2；<760px 导航折行横滚、C 代码收成抽屉、答题卡移到题下。
 - **无障碍**：Tab 首下即「跳到主要内容」；播放 / 单步是真 `<button>` 带 `aria-label`；画布 `<svg role="img">` 每步更新 `<title>`；高亮不只看颜色（待删斜线 + 虚线、比较描边）；尊重 `prefers-reduced-motion`。
 - **溢出探针**：`web/tests/overflow-probe.html` 在浏览器里用 1440 / 900 / 620 三档测横向溢出。

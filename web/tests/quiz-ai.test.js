@@ -13,6 +13,8 @@ const { JSDOM, VirtualConsole } = require('jsdom');
 const fs = require('fs');
 const path = require('path');
 
+const harness = require('./_harness.js');
+
 const BASE = 'http://127.0.0.1:8000';
 let passed = 0;
 let failed = 0;
@@ -49,6 +51,10 @@ async function open(page) {
   win.AbortController = AbortController;
   win.requestAnimationFrame = (fn) => setTimeout(() => fn(performance.now()), 16);
   win.cancelAnimationFrame = (id) => clearTimeout(id);
+
+  /* jsdom 不执行 type="module"，改由 esbuild 打成经典 IIFE 注入（见 _harness.js） */
+  await harness.injectPage(win, page);
+
   await new Promise((r) => {
     if (win.document.readyState === 'complete') r();
     else win.addEventListener('load', r);

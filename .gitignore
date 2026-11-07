@@ -42,3 +42,6 @@ build
 .workbuddy
 node_modules
 performance
+
+# Vite 构建产物（源码在 web/，产物不入库）
+web/dist/

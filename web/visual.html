@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="assets/css/components.css">
 <link rel="stylesheet" href="assets/css/pages/list.css">
 </head>
-<body data-page="visual">
+<body data-page="visual" data-offline-trace>
 
 <header class="topbar">
   <div class="topbar-inner">
@@ -168,18 +168,9 @@
   <span>&copy; <span id="foot-year">2026</span></span>
 </footer>
 
-<script src="assets/js/core/dom.js"></script>
-<script src="assets/js/core/sanitize.js"></script>
-<script src="assets/js/core/toast.js"></script>
-<script src="assets/js/core/parse.js"></script>
-<script src="assets/js/core/api.js"></script>
-<script src="assets/js/core/keys.js"></script>
-<script src="assets/js/core/trace.js"></script>
-<script src="assets/js/shell.js"></script>
-<script src="assets/js/pages/list/render.js"></script>
-<script src="assets/js/pages/list/ops.js"></script>
-<script src="assets/js/pages/visual/render.js"></script>
-<script src="assets/js/pages/visual/ops.js"></script>
-<script src="assets/js/pages/list/index.js"></script>
+<!-- 单入口（Vite 多页构建）：原先 13 条 <script> 的依赖顺序收敛到 -->
+<!-- assets/js/entries/visual.js。本页同时注册 list/* 与 visual/* 两套渲染器， -->
+<!-- 顺序会影响「后者覆盖前者」的注册结果，改动前务必看入口文件里的说明。 -->
+<script type="module" src="assets/js/entries/visual.js"></script>
 </body>
 </html>

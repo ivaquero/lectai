@@ -1,0 +1,18 @@
+{
+  "name": "lectai",
+  "version": "1.2.0",
+  "private": true,
+  "description": "数据结构学习平台：后端 Python（uv）+ 前端 web（pnpm workspace 唯一成员）",
+  "packageManager": "pnpm@12.18.0",
+  "scripts": {
+    "dev": "pnpm --filter lectai-web dev",
+    "build": "pnpm --filter lectai-web build",
+    "preview": "pnpm --filter lectai-web preview",
+    "test": "pnpm --filter lectai-web test",
+    "test:parity": "pnpm --filter lectai-web test:parity",
+    "typecheck": "pnpm --filter lectai-web typecheck"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

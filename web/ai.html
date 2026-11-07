@@ -94,12 +94,8 @@
   <span>&copy; <span id="foot-year">2026</span></span>
 </footer>
 
-<script src="assets/js/core/dom.js"></script>
-<script src="assets/js/core/sanitize.js"></script>
-<script src="assets/js/core/toast.js"></script>
-<script src="assets/js/core/api.js"></script>
-<script src="assets/js/core/offline.js"></script>
-<script src="assets/js/shell.js"></script>
-<script src="assets/js/pages/ai.js"></script>
+<!-- 单入口（Vite 多页构建）：原先 7 条 <script> 的依赖顺序收敛到 -->
+<!-- assets/js/entries/ai.js，顺序即依赖顺序，改动请改入口文件。 -->
+<script type="module" src="assets/js/entries/ai.js"></script>
 </body>
 </html>

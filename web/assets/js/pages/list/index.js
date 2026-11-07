@@ -159,7 +159,7 @@
 
   async function run() {
     if (!booted) {
-      DS.toast.warn('后端未连接，轨迹需要后端生成');
+      DS.toast.warn('后端未连接，本地轨迹引擎也不可用，无法生成轨迹');
       return;
     }
     const body = current.body(readForm());
@@ -381,14 +381,21 @@
 
   /* ============================ 离线 ============================ */
 
+  /* 完全离线：本地轨迹引擎也没起来（chunk 加载失败 / 非浏览器环境），只能停用 */
   function markOffline() {
     booted = false;
     $('#canvas-wrap').innerHTML =
       '<div class="canvas-empty"><span class="mark" aria-hidden="true">!</span>' +
-      '<span>后端未连接。' + MOD.title.replace('可视化', '') + '演示的轨迹由后端生成，' +
+      '<span>后端未连接，本地轨迹引擎也未能加载。' +
       '请在 backend 目录执行 <code>uvicorn main:app --port 8000</code> 后刷新。</span></div>';
     $('#btn-run').disabled = true;
     $('#btn-reset').disabled = true;
+  }
+
+  /* 离线但本地引擎可用：照常演示，轨迹改由 src/engine 生成（与后端逐字节对齐）。
+     顶部横幅（shell.js）已给出常驻说明，这里只补一条一次性提示。 */
+  function markLocalEngine() {
+    DS.toast.info('后端未连接，已切换到本地轨迹引擎（结果与后端一致）', 3600);
   }
 
   /* ============================ 启动 ============================ */
@@ -457,11 +464,14 @@
     $('#meta-sid').textContent = DS.api.sessionId().replace('web-', '');
 
     const b = await DS.api.probe();
-    if (!b.online) {
+    /* 后端不可达但本页有本地轨迹引擎 → 照常引导，轨迹改由 src/engine 现场生成 */
+    const localEngine = !b.online && DS.offline && DS.offline.traceAvailable();
+    if (!b.online && !localEngine) {
       markOffline();
       return;
     }
     booted = true;
+    if (localEngine) markLocalEngine();
     bootDefaults();
     checkOpsRegistry();
   }
