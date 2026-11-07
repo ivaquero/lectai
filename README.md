@@ -23,13 +23,15 @@ pnpm server              # 默认 127.0.0.1:8000；静态资源优先取 dist/we
 ```bash
 pnpm test                # 全部前端套件：sw + parity + offline-engine + list-page + quiz-ai + offline + visual-stackqueue
 pnpm test:parity         # 只跑「TS 引擎 ↔ golden 快照」逐字段比对（不需要后端）
-pnpm test:http-contract  # 服务端 HTTP 契约回归（自动起一个全新进程，回放 tests/http-contract.golden.json 里的快照）
+pnpm test:http-contract  # 服务端 HTTP 契约回归（自起全新进程，回放 server/tests/http-contract.golden.json）
 pnpm test:all            # 上面两套一起跑
+pnpm --filter @lectai/server test:record   # 有意改契约后重录快照（见「HTTP 契约快照与重录」）
 pnpm typecheck           # 前端引擎 + 服务端的类型检查（pnpm -r）
 pnpm check:deps          # 幽灵依赖检查（hoisted 布局的护栏，已并入 test:all）
 pnpm build               # 一次构建两侧：dist/web（五页 + sw.js）与 dist/server
 pnpm build:web           # 只构建前端
 pnpm dev                 # Vite dev server，/api 反代到 8000
+pnpm server:dev          # 监听 .ts 改动，esbuild 重建后自动重启
 pnpm data:check          # 校验题库结构 + 离线快照是否与数据源同步
 ```
 
@@ -56,6 +58,8 @@ lectai/
 │   └── check-deps.mjs          幽灵依赖检查：裸 import 与 package.json 声明做差集
 ├── server/                     Node 服务端（Fastify 5；内存态，重启即清空）
 │   ├── engine.ts               与 web/engine 的唯一耦合点（引擎同构复用）
+│   ├── env.ts                  路径与配置；向上找 pnpm-workspace.yaml 定位仓库根，不依赖 cwd
+│   ├── http.ts                 {code,msg,data} 外壳 + 参数校验（422 也套同一外壳）
 │   ├── app.ts                  装配：CORS / 路由 / 静态托管 / 兜底 / 错误外壳
 │   ├── {trace,quiz,ai,health}.ts  四个路由模块（链栈队轨迹 / 题库 / 答疑 / 健康）
 │   ├── session.ts              TTL + LRU 会话（无锁：单线程不需要）
@@ -97,7 +101,7 @@ dist/                            发布物（gitignore，由 pnpm build 生成�
   - 题库类（`/api/health`、`/api/quiz/*`、`/api/ai/ask`）走本地快照 `web/data/offline.json`（由 `tools/gen-offline-data.mjs` 从 `data/questions.json`+`data/kb.json` 生成，纯数据、探测到离线才 fetch），应答与线上完全同形，取题、判题、解析、答疑、首页指标均可用；
   - 轨迹类（`/api/linkedlist|stack|queue/trace/*` 与 `/ops`）走本地引擎 `web/engine/offline.ts`，**链表 / 栈 / 队列的逐步可视化在断网时照常演示**，含单步、回退、C 代码高亮。
   页面顶部挂「离线模式已启用」信息横幅并保留启动命令与重试。**线上取题接口依旧不返回答案**（答案只存在于离线段，供本地测试），防作弊原则不变。
-- **算法权威只有一份（`web/engine/`）**：服务端与离线版共用这份纯计算模块，语义不在别处独立演进。它的来源是迁移期的 Python 参考实现，行为已固化成 `web/tests/golden/trace-cases.golden.json`（36 个场景 / 569 个快照，含 10 个错误用例）；`pnpm test:parity` 逐字节比对，改错了立刻报红——这就是防漂移的机制，而不是靠自觉。
+- **算法权威只有一份（`web/engine/`）**：服务端与离线版共用这份纯计算模块，语义不在别处独立演进。它的来源是迁移期的 Python 参考实现，行为已固化成 `web/tests/trace-cases.golden.json`（36 个场景 / 569 个快照，含 10 个错误用例）；`pnpm test:parity` 逐字节比对，改错了立刻报红——这就是防漂移的机制，而不是靠自觉。
 - **离线状态的交接**：在线期间 `api.js` 把后端每次应答里的容器值记到 `offline.js`（仅内存，不触发任何下载）；探测到离线时才 `import()` 引擎 chunk（约 25KB，独立分包），并把最近一次后端状态灌进本地容器，断网那一刻画布不会重置成空表。本地容器只存值序列，写 `sessionStorage`，所以离线刷新、切 `#stack` / `#queue` 这些整页重载都不丢状态。**已知差异**：本地容器没有服务端的历史轨迹（回放从当前离线后的操作开始）。
 - **三道验收关**：`tests/parity.test.js` 验「引擎函数 = golden 语义」；`tests/offline-engine.test.js` 验「REST 路径 + 请求体 → 引擎 → 载荷」与线上同形（同一批 golden，覆盖 `/ops`、`/trace/state`、全部 12 个操作、错误外壳与持久化）；`server/tests/http-contract.test.js` 验服务端真实的 HTTP 行为（状态码、应答外壳、会话隔离、静态托管）与冻结的契约快照一致。
 - **加操作的改动面**：`web/engine/` 里加 `op_*` 与 `ops.table.json` 的条目 → 按同一形状补 golden → 前端 `pages/list/ops.js`。漏补 golden，parity 会指着具体字段路径告诉你差在哪。
@@ -137,9 +141,48 @@ dist/                            发布物（gitignore，由 pnpm build 生成�
 
 > `/reset` 兼容层保留，但新版可视化页改用 `/trace/state` 做首屏对齐。前端所有请求集中在 `web/core/api.js` 的 `API_ORIGIN`（默认 `http://127.0.0.1:8000`），改后端地址只动这一处。
 
-## 接入大模型（预留位）
+## 服务端
+
+Fastify 5 单进程、无数据库：轨迹计算、题库、答疑与静态托管都在这里；轨迹引擎与前端离线版共用 `web/engine/`，数据读仓库根 `data/`。会话存在内存、结点 id 在进程内自增，重启即清空。
+
+### 环境变量
+
+| 变量 | 默认 | 说明 |
+|---|---|---|
+| `LECTAI_PORT` | `8000` | 监听端口（与前端 `core/api.js` 的默认地址一致） |
+| `LECTAI_HOST` | `127.0.0.1` | 监听地址 |
+| `LECTAI_SESSION_TTL` | `3600` | 会话闲置过期秒数 |
+| `LECTAI_SESSION_MAX` | `10000` | 会话上限（LRU 淘汰） |
+| `LECTAI_STATIC_DIR` | 自动 | `dist/web` 存在则用它，否则用 `web/` 源码 |
+| `LECTAI_DATA_DIR` | `data/` | 题库 / 知识库目录（仓库根） |
+| `ALLOWED_ORIGINS` | 本地 8000 / 5500 / `null` | CORS 白名单，逗号分隔 |
+
+部署到反向代理后面时把 `LECTAI_HOST` 设成 `0.0.0.0`，其余变量按需覆盖。代码里不写死任何路径：静态目录、数据目录都由 `env.ts` 从 `import.meta.url` 向上找 `pnpm-workspace.yaml` 推出仓库根，因此源码直跑与跑 `dist/server/server.mjs`、从任何目录启动都是同一个答案。
+
+### HTTP 契约快照与重录
+
+`server/tests/http-contract.golden.json` 是服务端对外的行为快照，按**固定顺序**记录 129 次请求的状态码 / content-type / Redirect / 应答体：
+
+- 轨迹类接口体量大（与 `web/tests/` 重复），只锁规范化指纹；
+- HTML 只锁「是 HTML」，改版不会碰红；
+- 健康检查剔除 `uptime_sec` / `sessions` / `session_policy` 这些天然变化的字段；
+- 422 只锁状态码，外壳由测试单独断言必须是 `code=1 + msg`。
+
+**什么时候重录**：新增字段、改文案、加接口——凡是有意改契约，就 `pnpm --filter @lectai/server test:record` 重录，并在 PR 里逐条 review 快照 diff。快照的变化就是契约的变化。`CONTRACT_BASE=http://host:port` 可以对一个正在跑的实例录，不启动本地进程。
+
+### 装配顺序的坑（别改回去）
+
+`app.setErrorHandler` / `setNotFoundHandler` 必须在 `register(...)` **之前**调用，并且装配期间不要 `await app.register(...)`：await 会触发 `ready()`，之后再设的处理器被静默忽略——表现为参数校验虽然还是 422，但外壳退回 Fastify 默认的 `{statusCode,error,message}`。实测记录见 `server/app.ts` 文件头。
+
+### 接入大模型（预留位）
 
 编辑 `server/ai.ts`：`call_llm()` 填入 OpenAI 兼容调用 → 取消 `ask_ai()`「② 大模型」注释并把 `answer_content_type` 改 `plain_text` → 重启。接口不变、前端零改动。未接入时命中返回 `source=local_kb`，未命中返回 `source=mock`。
+
+### 已知边界
+
+- 结点 id 是进程内全局自增：两实例比对必须都是**全新进程**，否则 id 对不上（这也是契约测试坚持自起进程、并先检查端口未被占用的原因）。
+- 会话状态在进程内存，重启即清空、无法多实例横向扩容。要横向扩容再谈 Redis / KV。
+- 本地引擎与离线快照是两套数据来源：断网后可视化走 `web/engine/`，题库走 `web/data/offline.json`，两者都由 `tools/` 下的脚本产出。
 
 ## 前端要点
 
@@ -151,6 +194,6 @@ dist/                            发布物（gitignore，由 pnpm build 生成�
 
 ## 其他
 
-- 后端经历过一次 Python(FastAPI) → Node(Fastify) 的重写；旧实现已从仓库移除，它的行为作为基线冻结在 `web/tests/golden/`（引擎）与 `server/tests/golden/http-contract.json`（HTTP 契约）里。
-- 审计报告（33 项发现 + P0/P1 修复记录）：[docs/performance/](docs/performance/)（写作时后端还是 Python 版，路径引用为历史记录）。
+- 后端经历过一次 Python(FastAPI) → Node(Fastify) 的重写；旧实现已从仓库移除，它的行为作为基线冻结在 `web/tests/trace-cases.golden.json`（引擎）与 `server/tests/http-contract.golden.json`（HTTP 契约）里。
+- 审计报告（33 项发现 + P0/P1 修复记录）在本地 `docs/performance/`（该目录未纳入版本库，写作时后端还是 Python 版，路径引用属历史记录）。
 - 许可：保留所有权利（未指定 OSI 许可证前按私有处理）。
