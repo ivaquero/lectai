@@ -4,6 +4,8 @@
 
 无数据库、无外部服务：Node 20+ + Fastify 5 + 原生 ES2020 + SVG。前端源码是原生 ES2020，服务端直接托管即可运行；`web/` 另带一条**可选**的 Vite 构建链，只用于产出发布物。JS 侧依赖（含服务端）统一由 **pnpm** 管理（仓库根 `pnpm-workspace.yaml`，成员为 `web` 与 `server`），锁文件是根目录的 `pnpm-lock.yaml`，pnpm 版本由 `package.json` 的 `packageManager` 固定为 12.18.0——不要再用 npm / yarn 装依赖。
 
+依赖只装一份：`nodeLinker: hoisted`（写在 `pnpm-workspace.yaml` 里，pnpm 12 的设置只认这个文件），全部包平铺在根 `node_modules`，`web/` 与 `server/` 下**没有**自己的 `node_modules`。代价是解析不再受 `package.json` 约束，未声明的包也能 import 到，所以用 `pnpm check:deps` 扫描裸 import 与声明的差集来兜住（已并入 `pnpm test:all`）。
+
 **离线可用**：后端不可达时自动降级——题库 / 答疑 / 统计走本地快照，链表 / 栈 / 队列的逐步可视化走 `web/src/engine/` 的 TS 引擎（与冻结的 golden 快照逐字节对齐）。
 
 ## 快速开始
@@ -24,12 +26,14 @@ pnpm test:parity         # 只跑「TS 引擎 ↔ golden 快照」逐字段比�
 pnpm test:http-contract  # 服务端 HTTP 契约回归（自动起一个全新进程，回放 tests/http-contract.golden.json 里的快照）
 pnpm test:all            # 上面两套一起跑
 pnpm typecheck           # 前端引擎 + 服务端的类型检查（pnpm -r）
-pnpm build               # 逐页构建到 web/dist（含 sw.js）
+pnpm check:deps          # 幽灵依赖检查（hoisted 布局的护栏，已并入 test:all）
+pnpm build               # 一次构建两侧：web/dist（五页 + sw.js）与 server/dist
+pnpm build:web           # 只构建前端
 pnpm dev                 # Vite dev server，/api 反代到 8000
 pnpm data:check          # 校验题库结构 + 离线快照是否与数据源同步
 ```
 
-单独跑某个前端测试（需 `web/` 目录下先 `pnpm install` 过）：
+单独跑某个前端测试（依赖只需在仓库根 `pnpm install` 一次；采用 hoisted 扁平布局，`web/` 与 `server/` 下没有自己的 `node_modules`，全部依赖平铺在根目录）：
 
 ```bash
 node web/tests/list-page.test.js              # 前端集成（需 jsdom + 后端已启动）
@@ -48,7 +52,8 @@ lectai/
 │   └── cpp-*.csv               Typst 课程用的 C / C++ 速查表
 ├── tools/                      构建期脚本（纯 Node，零依赖）
 │   ├── build-questions.mjs     分章题合并成主库（--check 只校验不写回）
-│   └── gen-offline-data.mjs    生成前端离线快照 web/data/offline.json（改数据后重跑）
+│   ├── gen-offline-data.mjs    生成前端离线快照 web/data/offline.json（改数据后重跑）
+│   └── check-deps.mjs          幽灵依赖检查：裸 import 与 package.json 声明做差集
 ├── server/                     Node 服务端（Fastify 5；内存态，重启即清空）
 │   ├── src/engine.ts           与 web/src/engine 的唯一耦合点（引擎同构复用）
 │   ├── src/app.ts              装配：CORS / 路由 / 静态托管 / 兜底 / 错误外壳

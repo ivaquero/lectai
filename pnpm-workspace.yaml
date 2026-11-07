@@ -8,3 +8,21 @@ packages:
 # 键名是 allowBuilds（pnpm 12 起 onlyBuiltDependencies 已不再被读取）。
 allowBuilds:
   esbuild: true
+
+# 依赖布局：hoisted（npm 风格扁平）
+#
+# web 与 server 跑在同一个 Node 运行时上，server 只通过一行相对路径
+# （server/src/engine.ts → ../../web/src/engine）复用前端引擎，两者之间没有真正的
+# 包边界。isolated 布局会让每个子包各长一个 node_modules（哪怕里面全是符号链接），
+# 在 IDE / 搜索 / 备份面板里都是需要单独解释的目录。hoisted 之后：
+#
+#   根 node_modules/   全部依赖的实体（唯一一份）
+#   web/ server/       完全没有 node_modules
+#
+# 代价（已接受）：hoisted 会掩盖「幽灵依赖」——没写进 package.json 的包也能解析到。
+# 所以新增 import 时必须同步在对应子包的 package.json 里声明，检查靠
+# `pnpm check:deps`（扫 import 与声明的差集），不能靠「能跑就过」。
+#
+# ⚠ 键名必须写在 pnpm-workspace.yaml 里：pnpm 12 的设置只从这里读，
+#   .npmrc 只剩 registry / auth 还生效，写 node-linker 进去会被静默忽略。
+nodeLinker: hoisted

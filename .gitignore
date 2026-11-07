@@ -36,6 +36,4 @@ build
 .workbuddy
 node_modules
 performance
-
-web/dist/
-server/dist/
+dist

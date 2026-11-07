@@ -2,9 +2,9 @@
    vite.config.mjs —— 多页构建配置
    --------------------------------------------------------------------------
    ★ 后端零改动 ★
-     后端 main.py 的 CORS 白名单只含 8000/5500 端口，不含 5173。因此 dev
-     阶段不靠放宽 CORS，而是由 dev server 把 /api 反向代理到 127.0.0.1:8000，
-     前端一律走相对路径（见 core/api.js 里 ENV.DEV 分支）。
+     服务端 CORS 白名单只含 8000/5500 端口，不含 5173。因此 dev 阶段不靠放宽
+     CORS，而是由 dev server 把 /api 反向代理到 127.0.0.1:8000，前端一律走
+     相对路径（见 core/api.js 里 ENV.DEV 分支）。
 
    ★ base: './' ★
      产物用相对路径引用资源，可直接部署到任意子路径（如 /lectai/），
@@ -13,6 +13,11 @@
    ★ 多页入口 ★
      5 个 HTML 各自是一个入口，保持现有页面跳转（含 #hash 路由）不变；
      每个入口只 import 对应的 src/entries/<page>.js。
+
+   ★ cacheDir 指到仓库根 ★
+     Vite 默认把依赖预构建缓存写进 <root>/node_modules/.vite，而本仓库用
+     hoisted 布局，web/ 下刻意没有 node_modules。指到根的 node_modules/.vite-web，
+     子包目录就保持干净（根 node_modules 本来就整体 gitignore）。
    ========================================================================== */
 
 import { fileURLToPath } from 'node:url';
@@ -20,12 +25,14 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
+const cacheDir = fileURLToPath(new URL('../node_modules/.vite-web', import.meta.url));
 
 const BACKEND = process.env.LECTAI_BACKEND || 'http://127.0.0.1:8000';
 
 export default defineConfig({
   root,
   base: './',
+  cacheDir,
 
   // 没有 public/ 目录，显式关掉以免未来误建目录时行为不可预期
   publicDir: false,
