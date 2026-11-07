@@ -1,5 +1,5 @@
 /* ==========================================================================
-   server/src/routes/trace.ts —— 链表 / 栈 / 队列的轨迹接口
+   server/src/trace.ts —— 链表 / 栈 / 队列的轨迹接口
    --------------------------------------------------------------------------
    对应 api/trace.py + api/stackqueue_trace.py，三个模块共用一套注册逻辑：
 
@@ -17,10 +17,10 @@
 
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 
-import { OPS, OpError, list as LL, queue as Q, stack as S } from '../engine';
-import type { Session } from '../session';
-import { getSession } from '../session';
-import { err, intArrayField, intField, ok } from '../http';
+import { OPS, OpError, list as LL, queue as Q, stack as S } from './engine';
+import type { Session } from './session';
+import { getSession } from './session';
+import { err, intArrayField, intField, ok } from './http';
 
 type Kind = 'list' | 'stack' | 'queue';
 

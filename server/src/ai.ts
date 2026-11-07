@@ -1,5 +1,5 @@
 /* ==========================================================================
-   server/src/routes/ai.ts —— AI 答疑
+   server/src/ai.ts —— AI 答疑
    --------------------------------------------------------------------------
    当前仍是「本地知识库命中 → 模拟回答」两段式，大模型是预留位。
    打分规则是契约的一部分（应答已进 tests/http-contract.golden.json）：关键词
@@ -8,9 +8,9 @@
 
 import type { FastifyInstance } from 'fastify';
 
-import { aiKb } from '../data';
-import type { KbEntry } from '../data';
-import { ok, stringField } from '../http';
+import { aiKb } from './data';
+import type { KbEntry } from './data';
+import { ok, stringField } from './http';
 
 function kbMatch(question: string): KbEntry | null {
   const q = question.toLowerCase();

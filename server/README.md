@@ -39,11 +39,10 @@ src/
 ├── http.ts          {code,msg,data} 外壳 + 参数校验（422 也套同一外壳）
 ├── session.ts       TTL + LRU；容器一律空表起步
 ├── data.ts          题库 / 知识库懒加载 + mtime 热更新
-├── routes/
-│   ├── trace.ts     链 / 栈 / 队共用的注册逻辑（操作清单来自 OPS 表）
-│   ├── quiz.ts      分类 / 取题 / 判题 / 统计
-│   ├── ai.ts        知识库匹配 + 模拟回答（大模型预留位）
-│   └── health.ts    /api/health
+├── trace.ts         链 / 栈 / 队共用的注册逻辑（操作清单来自 OPS 表）
+├── quiz.ts          分类 / 取题 / 判题 / 统计
+├── ai.ts            知识库匹配 + 模拟回答（大模型预留位）
+├── health.ts        /api/health
 ├── app.ts           装配顺序：处理器 → CORS → 路由 → 静态
 └── main.ts          warm 数据 → listen → 信号处理
 ```

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   server/src/routes/quiz.ts —— 题库接口
+   server/src/quiz.ts —— 题库接口
    --------------------------------------------------------------------------
    契约要点（不能改）：
      · 取题接口永不返回 ans / exp / key —— 防作弊，判题只能在服务端做；
@@ -10,9 +10,9 @@
 
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 
-import { questionIndex, quizBank } from '../data';
-import { err, intField, ok, queryField, stringField } from '../http';
-import { getSession } from '../session';
+import { questionIndex, quizBank } from './data';
+import { err, intField, ok, queryField, stringField } from './http';
+import { getSession } from './session';
 
 const LETTERS = 'ABCD';
 

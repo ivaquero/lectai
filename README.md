@@ -57,7 +57,7 @@ lectai/
 ├── server/                     Node 服务端（Fastify 5；内存态，重启即清空）
 │   ├── src/engine.ts           与 web/src/engine 的唯一耦合点（引擎同构复用）
 │   ├── src/app.ts              装配：CORS / 路由 / 静态托管 / 兜底 / 错误外壳
-│   ├── src/routes/*.ts         trace（链栈队）/ quiz / ai / health
+│   ├── src/{trace,quiz,ai,health}.ts  四个路由模块（链栈队轨迹 / 题库 / 答疑 / 健康）
 │   ├── src/session.ts          TTL + LRU 会话（无锁：单线程不需要）
 │   ├── src/data.ts             题库 / 知识库懒加载 + mtime 热更新
 │   ├── build.mjs               esbuild 打成 dist/server/server.mjs（引擎内联，依赖 external）
@@ -140,7 +140,7 @@ dist/                            发布物（gitignore，由 pnpm build 生成�
 
 ## 接入大模型（预留位）
 
-编辑 `server/src/routes/ai.ts`：`call_llm()` 填入 OpenAI 兼容调用 → 取消 `ask_ai()`「② 大模型」注释并把 `answer_content_type` 改 `plain_text` → 重启。接口不变、前端零改动。未接入时命中返回 `source=local_kb`，未命中返回 `source=mock`。
+编辑 `server/src/ai.ts`：`call_llm()` 填入 OpenAI 兼容调用 → 取消 `ask_ai()`「② 大模型」注释并把 `answer_content_type` 改 `plain_text` → 重启。接口不变、前端零改动。未接入时命中返回 `source=local_kb`，未命中返回 `source=mock`。
 
 ## 前端要点
 

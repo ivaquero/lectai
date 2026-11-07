@@ -23,12 +23,12 @@ import fastifyStatic from '@fastify/static';
 import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
 
+import { registerAiRoutes } from './ai';
 import { LOG_LEVEL, STATIC_DIR, allowedOrigins } from './env';
+import { registerHealthRoutes } from './health';
 import { HttpError } from './http';
-import { registerAiRoutes } from './routes/ai';
-import { registerHealthRoutes } from './routes/health';
-import { registerQuizRoutes } from './routes/quiz';
-import { registerTraceRoutes } from './routes/trace';
+import { registerQuizRoutes } from './quiz';
+import { registerTraceRoutes } from './trace';
 
 export function buildApp(): FastifyInstance {
   const app = Fastify({
