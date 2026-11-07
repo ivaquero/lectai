@@ -33,6 +33,12 @@ const DIFFS = ['basic', 'mid', 'hard'];
 
 const load = (path) => JSON.parse(readFileSync(path, 'utf8'));
 
+/** 序列化时沿用原文件的换行符（1 空格缩进，与历史格式一致） */
+function stringifyLike(path, data) {
+  const eol = readFileSync(path, 'utf8').includes('\r\n') ? '\r\n' : '\n';
+  return (JSON.stringify(data, null, 1) + '\n').replace(/\n/g, eol);
+}
+
 /** 校验题库，返回 { total, errs } */
 function check(bank, label) {
   const errs = [];
@@ -142,8 +148,8 @@ function main() {
     return 0;
   }
 
-  if (!existsSync(BAK)) writeFileSync(BAK, JSON.stringify(load(MAIN), null, 1), 'utf8');
-  writeFileSync(MAIN, JSON.stringify(bank, null, 1), 'utf8');
+  if (!existsSync(BAK)) writeFileSync(BAK, stringifyLike(MAIN, load(MAIN)), 'utf8');
+  writeFileSync(MAIN, stringifyLike(MAIN, bank), 'utf8');
   console.log('\n已写入 data/questions.json（原文件备份为 data/questions.json.bak）');
   return 0;
 }

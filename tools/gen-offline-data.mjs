@@ -88,13 +88,26 @@ function renderJs(bundle) {
   return HEADER + JSON.stringify(bundle) + FOOTER;
 }
 
+/** 沿用现有文件的换行符：仓库里既有 LF 也有 CRLF，生成器不该顺手改掉它 */
+function existingEol(path) {
+  try {
+    return readFileSync(path, 'utf8').includes('\r\n') ? '\r\n' : '\n';
+  } catch {
+    return '\n';
+  }
+}
+
+/** 比对前先抹平换行符差异：Windows 检出 / 不同编辑器都不该让 --check 假红 */
+const stripEol = (s) => s.replace(/\r\n/g, '\n');
+
 function main() {
   const check = process.argv.includes('--check');
   const questionsRaw = JSON.parse(readFileSync(QUESTIONS_PATH, 'utf8'));
   const kbRaw = JSON.parse(readFileSync(KB_PATH, 'utf8'));
 
   const bundle = build(questionsRaw, kbRaw);
-  const js = renderJs(bundle);
+  const eol = existingEol(OUT_PATH);
+  const js = renderJs(bundle).replace(/\n/g, eol); // 载荷里没有裸换行（JSON 会转义）
 
   if (check) {
     let cur;
@@ -104,7 +117,7 @@ function main() {
       console.log('offline-data.js 不存在，请运行 node tools/gen-offline-data.mjs 生成');
       return 1;
     }
-    if (cur !== js) {
+    if (stripEol(cur) !== stripEol(js)) {
       console.log('offline-data.js 与数据源不一致，请重跑 node tools/gen-offline-data.mjs');
       return 1;
     }
