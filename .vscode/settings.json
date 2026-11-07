@@ -1,10 +1,9 @@
 {
     "python-envs.pythonProjects": [
         {
-            "path": "backend",
-            "envManager": "ms-python.python:venv",
-            "packageManager": "astral-sh.uv"
+            "path": ".",
+            "envManager": "ms-python.python:conda",
+            "packageManager": "ms-python.python:conda"
         }
-    ],
-    "python.terminal.activateEnvironment": true
+    ]
 }

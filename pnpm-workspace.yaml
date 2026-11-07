@@ -1,5 +1,5 @@
-# JS 侧的包管理器只认 pnpm：锁文件在仓库根，成员目前只有 web。
-# 后端是 Python（uv 管理），不进这个 workspace。
+# JS 侧的包管理器只认 pnpm：锁文件在仓库根，成员是 web 与 server。
+# 构建期脚本（tools/*.mjs）是零依赖的单文件 Node 脚本，不进 workspace。
 packages:
   - web
   - server

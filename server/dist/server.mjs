@@ -19,7 +19,7 @@ var SERVER_ROOT = resolve(HERE, "..");
 var REPO_ROOT = resolve(SERVER_ROOT, "..");
 var HOST = process.env.LECTAI_HOST ?? "127.0.0.1";
 var PORT = Number(process.env.LECTAI_PORT ?? 8e3);
-var DATA_DIR = process.env.LECTAI_DATA_DIR ?? resolve(REPO_ROOT, "backend", "data");
+var DATA_DIR = process.env.LECTAI_DATA_DIR ?? resolve(REPO_ROOT, "data");
 function resolveStaticDir() {
   const explicit = process.env.LECTAI_STATIC_DIR;
   if (explicit) return resolve(REPO_ROOT, explicit);
@@ -264,8 +264,8 @@ function registerAiRoutes(app2) {
   });
 }
 
-// ../web/src/engine/ops.generated.json
-var ops_generated_default = {
+// ../web/src/engine/ops.table.json
+var ops_table_default = {
   list: {
     build: {
       lines: [
@@ -455,7 +455,7 @@ var ops_generated_default = {
 };
 
 // ../web/src/engine/ops.ts
-var OPS = ops_generated_default;
+var OPS = ops_table_default;
 
 // ../web/src/engine/linkedlist.ts
 var linkedlist_exports = {};
@@ -491,7 +491,7 @@ var SeqTracer = class _SeqTracer {
     this.compares = 0;
     this.ptr = {};
     this.aside = [];
-    /** 与 Python 的 _visited_ids / _new_ids 同义，供各 op_* 直接 add */
+    /** 与参考实现的 _visited_ids / _new_ids 同义，供各 op_* 直接 add */
     this.visitedIds = /* @__PURE__ */ new Set();
     this.newIds = /* @__PURE__ */ new Set();
     this.anchorLast = {};
@@ -1601,7 +1601,7 @@ function registerHealthRoutes(app2) {
     async () => ok({
       service: "\u6570\u636E\u7ED3\u6784\u5B66\u4E60\u5E73\u53F0\u540E\u7AEF",
       version: "1.1.0",
-      // 与 Python 侧 /api/health 的 version 保持一致
+      // 对外契约版本号；改动同步 tests/golden/http-contract.json
       uptime_sec: Math.round((Date.now() - START) / 100) / 10,
       sessions: sessionCount(),
       session_policy: sessionStats(),
@@ -1718,7 +1718,7 @@ var SPECS = {
   queue: {
     routeBase: "/api/queue",
     moduleName: "queue",
-    // Python: _ops_payload("queue", Q.OPS, Q.CAPACITY - 1)
+    // 循环队列牺牲一个单元来区分空与满，所以对外报的容量是 CAPACITY - 1
     maxNodes: queue_exports.CAPACITY - 1,
     valuesMax: queue_exports.MAX_ITEMS
   }

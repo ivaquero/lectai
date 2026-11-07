@@ -1,9 +1,9 @@
 /* ==========================================================================
-   server/src/data.ts —— 题库 / 知识库（main.py §4 的对等实现）
+   server/src/data.ts —— 题库 / 知识库
    --------------------------------------------------------------------------
-   行为对齐 P-010：懒加载 + mtime 热更新，文件缺失时给出可读错误而不是裸 ENOENT。
-   与 Python 版的差异只有一处：读到的是同一个文件，校验逻辑（id = 分类-序号）
-   必须逐字对齐，否则题库 id 会整体错位。
+   懒加载 + mtime 热更新（改完 JSON 不用重启），文件缺失时给出可读错误而不是
+   裸 ENOENT。id 规则（分类-序号，从 1 起）属于对外契约：离线快照
+   core/offline-data.js 用同一套规则，两边错位会导致判题对不上题。
    ========================================================================== */
 
 import { readFileSync, statSync } from 'node:fs';
@@ -120,7 +120,7 @@ export function warmData(): { quizTotal: number; categories: number; kbEntries: 
   };
 }
 
-/** 健康检查用；数据缺文件时不抛错，返回 data_ok=false（与 Python 侧一致） */
+/** 健康检查用；数据缺文件时不抛错，返回 data_ok=false，让健康检查本身还能应答 */
 export function dataStats(): {
   quiz_total: number;
   quiz_categories: number;

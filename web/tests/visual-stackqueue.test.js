@@ -1,7 +1,7 @@
 /* ==========================================================================
    web/tests/visual-stackqueue.test.js —— 通用可视化页（栈 / 队列）
    --------------------------------------------------------------------------
-   前提：后端已启动  uvicorn main:app --port 8000
+   前提：后端已启动  仓库根执行 pnpm server
 
    运行：
      NODE_PATH=C:/Users/Rjx17/.workbuddy/binaries/node/workspace/node_modules \

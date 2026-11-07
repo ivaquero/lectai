@@ -1,0 +1,2019 @@
+{
+ "$comment": "服务端 HTTP 契约快照（node tests/http-contract.test.js --record 生成）。按固定顺序记录：状态码 / content-type / Redirect / 应答体；轨迹类接口只记规范化指纹，HTML 只记「是 HTML」，健康检查剔除 uptime 与会话计数。有意改契约才重录，并在 diff 里逐条 review。",
+ "exchanges": [
+  {
+   "label": "list-build-basic step#0 build",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "13a82c63932ac552"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-build-basic state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "c1f4114cd767a864"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-build-empty step#0 build",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "a2980fc9d0565897"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-build-empty state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "f0aa08badc401355"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-build-max step#0 build",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "b93a76ad1902595d"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-build-max state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "6ffaa43d3fc4adef"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-build-overflow step#0 build",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/build",
+   "status": 422,
+   "contentType": "application/json",
+   "body": {
+    "__validation_error": true
+   },
+   "location": ""
+  },
+  {
+   "label": "list-build-overflow state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "f0aa08badc401355"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-insert-head step#0 build",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "40c719713c0d95fc"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-insert-head step#1 insert-head",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/insert-head",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "31beb816ed67319b"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-insert-head state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "7e55736f75f81244"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-insert-head-empty step#0 insert-head",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/insert-head",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "82de74207d71481a"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-insert-head-empty state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "9899fa1e8f2a3900"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-insert-tail step#0 build",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "bf0b19a9bf77c3de"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-insert-tail step#1 insert-tail",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/insert-tail",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "fd05bb15741cecca"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-insert-tail state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "c5d5afe041e461d1"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-insert-tail-empty step#0 insert-tail",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/insert-tail",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "f96af5663333561f"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-insert-tail-empty state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "587ed95d3395d466"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-pos-first step#0 build",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "e9fac7b3286a2ccc"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-pos-first step#1 delete-pos",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/delete-pos",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "5cb8357cf5955dda"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-pos-first state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "31cf171632e1940b"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-pos-mid step#0 build",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "6eb1ffe015a5cae2"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-pos-mid step#1 delete-pos",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/delete-pos",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "acceff230bec29fa"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-pos-mid state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "c3bbc7e0788d9c9c"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-pos-last step#0 build",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "d59122ef9811daa3"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-pos-last step#1 delete-pos",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/delete-pos",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "5a1f3e105b09cc80"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-pos-last state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "65facf686c7c6501"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-pos-oob step#0 build",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "6fb4383a9181d2e0"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-pos-oob step#1 delete-pos",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/delete-pos",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "4a3e955d5b73d64a"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-pos-oob state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "3acb047a4fda38d3"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-value-head step#0 build",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "ab422a15957b56d8"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-value-head step#1 delete-value",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/delete-value",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "533c7d4849e1f804"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-value-head state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "0577870bb1106b02"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-value-mid step#0 build",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "b93cf921e93bf648"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-value-mid step#1 delete-value",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/delete-value",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "7a5be53db1b85bad"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-value-mid state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "f863a5a7238c36d8"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-value-missing step#0 build",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "9fd66c5c82b9923c"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-value-missing step#1 delete-value",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/delete-value",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "aa6e9fb42f8ccaa2"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-delete-value-missing state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "798427dfc753bfe6"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-search-found step#0 build",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "ceac8f15cc48d0d2"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-search-found step#1 search",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/search",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "76059da2d2d15ea1"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-search-found state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "3a70d8531d6af253"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-search-missing step#0 build",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "c52842340d22954c"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-search-missing step#1 search",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/search",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "aba45d2922b911d7"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-search-missing state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "a24a253b4afb8ee4"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-traverse step#0 build",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "9a74f5174a6bdc13"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-traverse step#1 traverse",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/traverse",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "9df18cba8faaa930"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-traverse state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "ae6ecccbab25ce50"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-traverse-empty step#0 traverse",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/traverse",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "dc3d0572081f166f"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-traverse-empty state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "f0aa08badc401355"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-capacity-then-insert step#0 build",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "0f9d16a98ac3b6b8"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-capacity-then-insert step#1 insert-head",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/insert-head",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "90dbe722d196f218"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-capacity-then-insert state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "cd1f2176b3fb5bc4"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-mixed-session step#0 build",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "407b57fca35480f4"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-mixed-session step#1 insert-head",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/insert-head",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "5dcad3cc00365a2b"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-mixed-session step#2 insert-tail",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/insert-tail",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "ac8b0156d16236ea"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-mixed-session step#3 delete-pos",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/delete-pos",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "48f2e79e51993d41"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-mixed-session step#4 delete-value",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/delete-value",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "afbdb9b5cda17aea"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-mixed-session step#5 search",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/search",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "e37f6bde787a16f0"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-mixed-session step#6 traverse",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/traverse",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "9c60258ed6ded58e"
+   },
+   "location": ""
+  },
+  {
+   "label": "list-mixed-session state",
+   "method": "GET",
+   "url": "/api/linkedlist/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "ba8247c845e4888e"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-build step#0 build",
+   "method": "POST",
+   "url": "/api/stack/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "bdba04a2be126996"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-build state",
+   "method": "GET",
+   "url": "/api/stack/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "72ece1296b7753e2"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-push-pop step#0 build",
+   "method": "POST",
+   "url": "/api/stack/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "8e7fe0ba76dadfe6"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-push-pop step#1 push",
+   "method": "POST",
+   "url": "/api/stack/trace/push",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "370c6c6d382264d7"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-push-pop step#2 push",
+   "method": "POST",
+   "url": "/api/stack/trace/push",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "543dd76b47d5b9b7"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-push-pop step#3 pop",
+   "method": "POST",
+   "url": "/api/stack/trace/pop",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "e9fa0100e1ff1928"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-push-pop step#4 pop",
+   "method": "POST",
+   "url": "/api/stack/trace/pop",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "7b52d3bab7506ed2"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-push-pop state",
+   "method": "GET",
+   "url": "/api/stack/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "49a56a7a563d0fc3"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-peek-traverse step#0 build",
+   "method": "POST",
+   "url": "/api/stack/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "80e826c5d799dd7a"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-peek-traverse step#1 peek",
+   "method": "POST",
+   "url": "/api/stack/trace/peek",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "b2c248aa20747510"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-peek-traverse step#2 traverse",
+   "method": "POST",
+   "url": "/api/stack/trace/traverse",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "d3d4f90e55283699"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-peek-traverse state",
+   "method": "GET",
+   "url": "/api/stack/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "b2c70712b62300ee"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-pop-empty step#0 pop",
+   "method": "POST",
+   "url": "/api/stack/trace/pop",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "d87fd49e29926a04"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-pop-empty state",
+   "method": "GET",
+   "url": "/api/stack/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "2175bf9ed75cdc6e"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-peek-empty step#0 peek",
+   "method": "POST",
+   "url": "/api/stack/trace/peek",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "a0241da68e2ac401"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-peek-empty state",
+   "method": "GET",
+   "url": "/api/stack/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "2175bf9ed75cdc6e"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-capacity step#0 build",
+   "method": "POST",
+   "url": "/api/stack/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "8c4520b2e65af637"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-capacity step#1 push",
+   "method": "POST",
+   "url": "/api/stack/trace/push",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "a3c1478bd7955ba5"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-capacity state",
+   "method": "GET",
+   "url": "/api/stack/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "f2fd6fe3ec08bf26"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-traverse-empty step#0 traverse",
+   "method": "POST",
+   "url": "/api/stack/trace/traverse",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "f8fed6fc12923709"
+   },
+   "location": ""
+  },
+  {
+   "label": "stack-traverse-empty state",
+   "method": "GET",
+   "url": "/api/stack/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "2175bf9ed75cdc6e"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-build step#0 build",
+   "method": "POST",
+   "url": "/api/queue/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "1abd642f15eaa2a8"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-build state",
+   "method": "GET",
+   "url": "/api/queue/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "4e42fd136464aa4e"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-enqueue-dequeue step#0 build",
+   "method": "POST",
+   "url": "/api/queue/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "bd7d44a75898f957"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-enqueue-dequeue step#1 enqueue",
+   "method": "POST",
+   "url": "/api/queue/trace/enqueue",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "8654707588afca6c"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-enqueue-dequeue step#2 dequeue",
+   "method": "POST",
+   "url": "/api/queue/trace/dequeue",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "b483661e596e44ec"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-enqueue-dequeue step#3 dequeue",
+   "method": "POST",
+   "url": "/api/queue/trace/dequeue",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "6b97d98124ef6024"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-enqueue-dequeue state",
+   "method": "GET",
+   "url": "/api/queue/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "de79af0810cad779"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-peek-traverse step#0 build",
+   "method": "POST",
+   "url": "/api/queue/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "9818502cab7cd1ed"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-peek-traverse step#1 peek",
+   "method": "POST",
+   "url": "/api/queue/trace/peek",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "2f0273878f976547"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-peek-traverse step#2 traverse",
+   "method": "POST",
+   "url": "/api/queue/trace/traverse",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "ffef2300284cdfc0"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-peek-traverse state",
+   "method": "GET",
+   "url": "/api/queue/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "0ef0929e23c80560"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-dequeue-empty step#0 dequeue",
+   "method": "POST",
+   "url": "/api/queue/trace/dequeue",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "9642a260e922f2a9"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-dequeue-empty state",
+   "method": "GET",
+   "url": "/api/queue/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "7e152c657f2cc3c0"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-peek-empty step#0 peek",
+   "method": "POST",
+   "url": "/api/queue/trace/peek",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "e754e372c49e1d38"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-peek-empty state",
+   "method": "GET",
+   "url": "/api/queue/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "7e152c657f2cc3c0"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-capacity step#0 build",
+   "method": "POST",
+   "url": "/api/queue/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "d58f711ac39fc1d2"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-capacity step#1 enqueue",
+   "method": "POST",
+   "url": "/api/queue/trace/enqueue",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "c08efe5b1dacbaac"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-capacity state",
+   "method": "GET",
+   "url": "/api/queue/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "79d0468f38cd9a6d"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-traverse-empty step#0 traverse",
+   "method": "POST",
+   "url": "/api/queue/trace/traverse",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "c84eaf43108dc7e3"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-traverse-empty state",
+   "method": "GET",
+   "url": "/api/queue/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "7e152c657f2cc3c0"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-wrap-around step#0 build",
+   "method": "POST",
+   "url": "/api/queue/trace/build",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "3a6a4d0b0c8be2c7"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-wrap-around step#1 dequeue",
+   "method": "POST",
+   "url": "/api/queue/trace/dequeue",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "de924f7da93a63ad"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-wrap-around step#2 dequeue",
+   "method": "POST",
+   "url": "/api/queue/trace/dequeue",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "edc7a27214e5d429"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-wrap-around step#3 dequeue",
+   "method": "POST",
+   "url": "/api/queue/trace/dequeue",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "eb69038d080af345"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-wrap-around step#4 enqueue",
+   "method": "POST",
+   "url": "/api/queue/trace/enqueue",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "32602d705cfaf0b8"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-wrap-around step#5 enqueue",
+   "method": "POST",
+   "url": "/api/queue/trace/enqueue",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "f09fa6c860186cc2"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-wrap-around step#6 traverse",
+   "method": "POST",
+   "url": "/api/queue/trace/traverse",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "a8b4c163f1d01f90"
+   },
+   "location": ""
+  },
+  {
+   "label": "queue-wrap-around state",
+   "method": "GET",
+   "url": "/api/queue/trace/state",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "__digest": "54acb6e76b4b2205"
+   },
+   "location": ""
+  },
+  {
+   "label": "list/ops",
+   "method": "GET",
+   "url": "/api/linkedlist/ops",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "code": 0,
+    "msg": "ok",
+    "data": {
+     "module": "linkedlist",
+     "max_nodes": 12,
+     "ops": [
+      {
+       "key": "build",
+       "title": "尾插法建表",
+       "lines": [
+        "head = NULL;",
+        "s = malloc(...); s->data = x; s->next = NULL;",
+        "tail->next = s;   // 空表时: head = s",
+        "tail = s;"
+       ],
+       "structural": [
+        0
+       ]
+      },
+      {
+       "key": "delete-pos",
+       "title": "按位序删除",
+       "lines": [
+        "if (pos < 1 || pos > n) error;",
+        "if (pos == 1) { q = head; head = head->next; free(q); return; }",
+        "p = head;",
+        "for (i = 1; i < pos - 1; i++) p = p->next;   // 走到前驱",
+        "q = p->next;",
+        "p->next = q->next;      // 摘链：先接后，再释放",
+        "free(q);"
+       ],
+       "structural": []
+      },
+      {
+       "key": "delete-value",
+       "title": "按值删除",
+       "lines": [
+        "prev = NULL;  p = head;",
+        "while (p != NULL && p->data != x) {",
+        "    prev = p;  p = p->next;",
+        "}",
+        "if (p == NULL) return NOT_FOUND;",
+        "if (prev == NULL) head = p->next;",
+        "else prev->next = p->next;",
+        "free(p);"
+       ],
+       "structural": []
+      },
+      {
+       "key": "insert-head",
+       "title": "头插法插入",
+       "lines": [
+        "s = (Node *)malloc(sizeof(Node));",
+        "s->data = x;",
+        "s->next = head;",
+        "head = s;"
+       ],
+       "structural": []
+      },
+      {
+       "key": "insert-tail",
+       "title": "尾插法插入",
+       "lines": [
+        "s = (Node *)malloc(sizeof(Node));",
+        "s->data = x;  s->next = NULL;",
+        "if (head == NULL) { head = s; return; }",
+        "p = head;",
+        "while (p->next != NULL) p = p->next;",
+        "p->next = s;"
+       ],
+       "structural": []
+      },
+      {
+       "key": "search",
+       "title": "按值查找",
+       "lines": [
+        "p = head;  pos = 1;",
+        "while (p != NULL) {",
+        "    if (p->data == x) return pos;",
+        "    p = p->next;  pos++;",
+        "}",
+        "return -1;   // 未找到"
+       ],
+       "structural": []
+      },
+      {
+       "key": "traverse",
+       "title": "遍历链表",
+       "lines": [
+        "p = head;",
+        "while (p != NULL) {",
+        "    visit(p->data);",
+        "    p = p->next;",
+        "}"
+       ],
+       "structural": []
+      }
+     ]
+    }
+   },
+   "location": ""
+  },
+  {
+   "label": "stack/ops",
+   "method": "GET",
+   "url": "/api/stack/ops",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "code": 0,
+    "msg": "ok",
+    "data": {
+     "module": "stack",
+     "max_nodes": 10,
+     "ops": [
+      {
+       "key": "build",
+       "title": "建栈（逐个入栈）",
+       "lines": [
+        "S.top = -1;                               // 空栈",
+        "for each x in 输入序列:",
+        "    if (S.top == MaxSize - 1) return ERROR;",
+        "    S.data[++S.top] = x;                  // 指针先加一再写入"
+       ],
+       "structural": [
+        0
+       ]
+      },
+      {
+       "key": "peek",
+       "title": "读栈顶 peek",
+       "lines": [
+        "if (S.top == -1) return ERROR;            // 栈空",
+        "return S.data[S.top];                     // 只读，top 不动"
+       ],
+       "structural": []
+      },
+      {
+       "key": "pop",
+       "title": "出栈 pop",
+       "lines": [
+        "if (S.top == -1) return ERROR;            // 栈空，无法出栈",
+        "x = S.data[S.top];                        // ① 先取栈顶元素",
+        "S.top--;                                  // ② 指针再下移",
+        "return x;"
+       ],
+       "structural": []
+      },
+      {
+       "key": "push",
+       "title": "入栈 push",
+       "lines": [
+        "if (S.top == MaxSize - 1) return ERROR;   // 栈满，无法入栈",
+        "S.top++;                                  // ① 栈顶指针先上移",
+        "S.data[S.top] = x;                        // ② 再写入元素",
+        "return OK;"
+       ],
+       "structural": []
+      },
+      {
+       "key": "traverse",
+       "title": "遍历（自栈顶向下）",
+       "lines": [
+        "for (i = S.top; i >= 0; i--)",
+        "    visit(S.data[i]);                     // 从栈顶往栈底"
+       ],
+       "structural": []
+      }
+     ]
+    }
+   },
+   "location": ""
+  },
+  {
+   "label": "queue/ops",
+   "method": "GET",
+   "url": "/api/queue/ops",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "code": 0,
+    "msg": "ok",
+    "data": {
+     "module": "queue",
+     "max_nodes": 9,
+     "ops": [
+      {
+       "key": "build",
+       "title": "建队（逐个入队）",
+       "lines": [
+        "Q.front = Q.rear = 0;                     // 空队",
+        "for each x in 输入序列:",
+        "    Q.data[Q.rear] = x;",
+        "    Q.rear = (Q.rear + 1) % MaxSize;      // 取模成环"
+       ],
+       "structural": [
+        0
+       ]
+      },
+      {
+       "key": "dequeue",
+       "title": "出队 dequeue",
+       "lines": [
+        "if (Q.front == Q.rear) return ERROR;       // 队空",
+        "x = Q.data[Q.front];                       // ① 取队头元素",
+        "Q.front = (Q.front + 1) % MaxSize;         // ② 队头指针后移",
+        "return x;"
+       ],
+       "structural": []
+      },
+      {
+       "key": "enqueue",
+       "title": "入队 enqueue",
+       "lines": [
+        "if ((Q.rear + 1) % MaxSize == Q.front) return ERROR;  // 队满",
+        "Q.data[Q.rear] = x;                        // ① 写入队尾位置",
+        "Q.rear = (Q.rear + 1) % MaxSize;           // ② 队尾指针后移（取模）",
+        "return OK;"
+       ],
+       "structural": []
+      },
+      {
+       "key": "peek",
+       "title": "读队头 peek",
+       "lines": [
+        "if (Q.front == Q.rear) return ERROR;       // 队空",
+        "return Q.data[Q.front];                    // 只读，front 不动"
+       ],
+       "structural": []
+      },
+      {
+       "key": "traverse",
+       "title": "遍历（队头 → 队尾）",
+       "lines": [
+        "i = Q.front;",
+        "while (i != Q.rear) { visit(Q.data[i]); i = (i + 1) % MaxSize; }"
+       ],
+       "structural": []
+      }
+     ]
+    }
+   },
+   "location": ""
+  },
+  {
+   "label": "GET /api/quiz/categories",
+   "method": "GET",
+   "url": "/api/quiz/categories",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "code": 0,
+    "msg": "ok",
+    "data": {
+     "categories": [
+      {
+       "key": "list",
+       "name": "线性表（顺序表 · 链表）",
+       "count": 22
+      },
+      {
+       "key": "stackqueue",
+       "name": "栈 · 队列 · 串",
+       "count": 22
+      },
+      {
+       "key": "tree",
+       "name": "树与二叉树",
+       "count": 22
+      },
+      {
+       "key": "sort",
+       "name": "排序",
+       "count": 22
+      },
+      {
+       "key": "graph",
+       "name": "图",
+       "count": 12
+      },
+      {
+       "key": "search",
+       "name": "查找",
+       "count": 12
+      }
+     ],
+     "total": 112
+    }
+   },
+   "location": ""
+  },
+  {
+   "label": "GET /api/quiz/questions?category=list",
+   "method": "GET",
+   "url": "/api/quiz/questions?category=list",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "code": 0,
+    "msg": "ok",
+    "data": {
+     "category": "list",
+     "name": "线性表（顺序表 · 链表）",
+     "total": 22,
+     "questions": [
+      {
+       "id": "list-1",
+       "tag": "顺序表 · 插入移动次数",
+       "question": "在长度为 n 的顺序表中，于第 i 个位置（1 ≤ i ≤ n+1）插入一个元素，需要移动的元素个数是：",
+       "options": [
+        "n - i",
+        "n - i + 1",
+        "n - i - 1",
+        "i"
+       ],
+       "difficulty": "mid"
+      },
+      {
+       "id": "list-2",
+       "tag": "链表 · 判空条件",
+       "question": "对于一个头指针为 head 的<b>带头结点</b>单链表，判定该表为空表的条件是：",
+       "options": [
+        "head == NULL",
+        "head->next == NULL",
+        "head->next == head",
+        "head != NULL"
+       ],
+       "difficulty": "basic"
+      },
+      {
+       "id": "list-3",
+       "tag": "链表 · 就地逆置",
+       "question": "将带头结点的单链表<b>就地逆置</b>（不得新建结点），所需的额外空间复杂度是：",
+       "options": [
+        "O(1)",
+        "O(n)",
+        "O(log₂n)",
+        "O(n²)"
+       ],
+       "difficulty": "mid"
+      },
+      {
+       "id": "list-4",
+       "tag": "链表 · 指针操作顺序",
+       "question": "在单链表中，把结点 s 插入到结点 p 之后，正确的指针操作顺序是：",
+       "options": [
+        "p->next = s; s->next = p->next;",
+        "s->next = p->next; p->next = s;",
+        "两种顺序都可以",
+        "先 free(p) 再插入"
+       ],
+       "difficulty": "basic"
+      },
+      {
+       "id": "list-5",
+       "tag": "链表 · 求表长",
+       "question": "求一个不额外维护长度的单链表的表长，时间复杂度是：",
+       "options": [
+        "O(1)",
+        "O(log₂n)",
+        "O(n)",
+        "O(n²)"
+       ],
+       "difficulty": "basic"
+      },
+      {
+       "id": "list-6",
+       "tag": "链表 · 删除后继",
+       "question": "已知指针 p 指向单链表中的某个结点，要删除 p 的<b>直接后继</b>，至少需要知道：",
+       "options": [
+        "p 的前驱结点",
+        "p 本身即可",
+        "头指针和尾指针",
+        "无法删除"
+       ],
+       "difficulty": "mid"
+      },
+      {
+       "id": "list-7",
+       "tag": "链表 · 删除所有值为 x 的结点",
+       "question": "删除单链表中所有值为 x 的结点，要求时间 O(n)、空间 O(1)，应采用哪种做法？",
+       "options": [
+        "递归删除",
+        "用前驱指针 pre 遍历，pre 只在保留结点时后移",
+        "先排序再集中删除",
+        "借助哈希表记录待删结点"
+       ],
+       "difficulty": "mid"
+      },
+      {
+       "id": "list-8",
+       "tag": "循环双链表 · 指针恒等式",
+       "question": "在循环双链表中（每个结点有 prior 和 next 两个指针），<code>p->prior->next</code> 等于：",
+       "options": [
+        "p",
+        "p->next",
+        "p->prior",
+        "NULL"
+       ],
+       "difficulty": "mid"
+      },
+      {
+       "id": "list-9",
+       "tag": "顺序表 · 随机访问",
+       "question": "关于顺序表与单链表的比较，正确的是：",
+       "options": [
+        "顺序表支持 O(1) 随机访问，单链表只能顺序存取",
+        "单链表的存储密度高于顺序表",
+        "顺序表的插入删除一定比单链表快",
+        "单链表需要预先分配一整块连续空间"
+       ],
+       "difficulty": "basic"
+      },
+      {
+       "id": "list-10",
+       "tag": "单链表 · 判空",
+       "question": "带头结点的单链表，判空条件是：",
+       "options": [
+        "head == NULL",
+        "head->next == NULL",
+        "head->next == head",
+        "head->data == 0"
+       ],
+       "difficulty": "basic"
+      },
+      {
+       "id": "list-11",
+       "tag": "双链表 · 删除",
+       "question": "在双链表中删除结点 p（p 非首尾），需要执行的语句是：",
+       "options": [
+        "p->prior->next = p->next; p->next->prior = p->prior;",
+        "p->next = p->prior; p->prior = p->next;",
+        "p->prior = p->next->next; free(p->next);",
+        "free(p);（其余指针会自动修正）"
+       ],
+       "difficulty": "basic"
+      },
+      {
+       "id": "list-12",
+       "tag": "循环链表 · 判空",
+       "question": "带头结点的循环单链表（尾结点 next 指回头结点）判空条件是：",
+       "options": [
+        "head == NULL",
+        "head->next == head",
+        "head->next == NULL",
+        "head->prior == head"
+       ],
+       "difficulty": "basic"
+      },
+      {
+       "id": "list-13",
+       "tag": "单链表 · 就地逆置",
+       "question": "单链表就地逆置（不新建结点）的时间与空间复杂度分别是：",
+       "options": [
+        "O(n) / O(1)",
+        "O(n) / O(n)",
+        "O(n²) / O(1)",
+        "O(1) / O(1)"
+       ],
+       "difficulty": "basic"
+      },
+      {
+       "id": "list-14",
+       "tag": "单链表 · 删除自身",
+       "question": "已知单链表中某个结点 p，关于在 O(1) 时间内删除它的说法，正确的是：",
+       "options": [
+        "只能 O(1) 删除 p 的后继；删除 p 本身必须先找到前驱，总体 O(n)",
+        "可以直接删除 p 本身，O(1)",
+        "无论如何都删不掉",
+        "必须先找到尾结点才能删"
+       ],
+       "difficulty": "mid"
+      },
+      {
+       "id": "list-15",
+       "tag": "顺序表 · 平均移动",
+       "question": "长度为 n 的顺序表，在各位置等概率插入时，平均需要移动的元素个数是：",
+       "options": [
+        "n/2",
+        "(n-1)/2",
+        "n",
+        "(n+1)/2"
+       ],
+       "difficulty": "mid"
+      },
+      {
+       "id": "list-16",
+       "tag": "静态链表",
+       "question": "静态链表（用数组描述的链表）中，“指针域”存放的是：",
+       "options": [
+        "后继结点的地址",
+        "后继元素在数组中的下标",
+        "后继元素的值",
+        "结点的数据域长度"
+       ],
+       "difficulty": "basic"
+      },
+      {
+       "id": "list-17",
+       "tag": "归并 · 复杂度",
+       "question": "把长度分别为 m 和 n 的两个有序单链表归并成一个有序表，最少比较次数与时间复杂度为：",
+       "options": [
+        "min(m,n) / O(m+n)",
+        "m+n / O(mn)",
+        "1 / O(1)",
+        "max(m,n) / O(m log n)"
+       ],
+       "difficulty": "mid"
+      },
+      {
+       "id": "list-18",
+       "tag": "存储密度",
+       "question": "关于存储密度（数据占的空间 / 结点总空间），正确的是：",
+       "options": [
+        "顺序表密度为 1，单链表小于 1",
+        "单链表密度更大",
+        "二者相同",
+        "无法比较"
+       ],
+       "difficulty": "basic"
+      },
+      {
+       "id": "list-19",
+       "tag": "线性表 · 选型",
+       "question": "某线性表需要频繁按序号随机访问，很少插入删除，宜采用：",
+       "options": [
+        "顺序表",
+        "单链表",
+        "双向链表",
+        "循环链表"
+       ],
+       "difficulty": "basic"
+      },
+      {
+       "id": "list-20",
+       "tag": "循环双链表 · 插入",
+       "question": "在循环双链表的结点 p 之后插入结点 s，正确的指针修改顺序是：",
+       "options": [
+        "s->next = p->next; p->next->prior = s; s->prior = p; p->next = s;",
+        "p->next = s; s->prior = p; s->next = p->next; p->next->prior = s;",
+        "s->prior = p; s->next = p->next; p->next = s;（不必改 prior）",
+        "s->next = p; p->prior = s;"
+       ],
+       "difficulty": "hard"
+      },
+      {
+       "id": "list-21",
+       "tag": "单链表 · 头插",
+       "question": "在不带头结点的单链表表头插入新结点 s，正确的操作是：",
+       "options": [
+        "s->next = head; head = s;",
+        "head = s; s->next = head;",
+        "s->next = head->next; head->next = s;",
+        "s = head; head = head->next;"
+       ],
+       "difficulty": "basic"
+      },
+      {
+       "id": "list-22",
+       "tag": "单链表 · 求表长",
+       "question": "不带头结点且未维护 length 字段的单链表，求表长的时间复杂度是：",
+       "options": [
+        "O(1)",
+        "O(n)",
+        "O(log n)",
+        "O(n²)"
+       ],
+       "difficulty": "basic"
+      }
+     ]
+    }
+   },
+   "location": ""
+  },
+  {
+   "label": "GET /api/quiz/questions?category=不存在",
+   "method": "GET",
+   "url": "/api/quiz/questions?category=NOT_A_CATEGORY",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "code": 1,
+    "msg": "未知分类 NOT_A_CATEGORY，可用：list, stackqueue, tree, sort, graph, search",
+    "data": null
+   },
+   "location": ""
+  },
+  {
+   "label": "POST /api/quiz/submit list-1",
+   "method": "POST",
+   "url": "/api/quiz/submit",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "code": 0,
+    "msg": "ok",
+    "data": {
+     "question_id": "list-1",
+     "difficulty": "mid",
+     "correct": false,
+     "answer_index": 1,
+     "answer_letter": "B",
+     "answer_text": "n - i + 1",
+     "explanation": "第 i 个位置插入，需要把原来第 i 到第 n 个元素整体后移，共 <code>n - i + 1</code> 个。",
+     "explanation_content_type": "trusted_html",
+     "key_point": "第 i 位插入移 <code>n-i+1</code> 个；第 i 位删除移 <code>n-i</code> 个 —— 这一组不要记混。",
+     "key_point_content_type": "trusted_html",
+     "msg": "❌ 回答错误，正确答案是 B"
+    }
+   },
+   "location": ""
+  },
+  {
+   "label": "POST /api/quiz/submit list-2",
+   "method": "POST",
+   "url": "/api/quiz/submit",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "code": 0,
+    "msg": "ok",
+    "data": {
+     "question_id": "list-2",
+     "difficulty": "basic",
+     "correct": true,
+     "answer_index": 1,
+     "answer_letter": "B",
+     "answer_text": "head->next == NULL",
+     "explanation": "带头结点时 head 始终非空（它指向头结点本身），空表由头结点的 next 为空表示。<br>A 选项是<b>不带头结点</b>时的判空条件；C 选项是<b>循环链表</b>空表的判定条件。",
+     "explanation_content_type": "trusted_html",
+     "key_point": "记住两组：带头结点看 <code>head->next</code>；不带头结点看 <code>head</code>。",
+     "key_point_content_type": "trusted_html",
+     "msg": "✅ 回答正确！"
+    }
+   },
+   "location": ""
+  },
+  {
+   "label": "POST /api/quiz/submit 不存在的题",
+   "method": "POST",
+   "url": "/api/quiz/submit",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "code": 1,
+    "msg": "题目不存在：list-9999",
+    "data": null
+   },
+   "location": ""
+  },
+  {
+   "label": "GET /api/quiz/stats",
+   "method": "GET",
+   "url": "/api/quiz/stats",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "code": 0,
+    "msg": "ok",
+    "data": {
+     "categories": {
+      "list": {
+       "done": 2,
+       "right": 1,
+       "accuracy": 50
+      }
+     },
+     "total_done": 2,
+     "total_right": 1
+    }
+   },
+   "location": ""
+  },
+  {
+   "label": "POST /api/ai/ask 命中关键词「顺序表」",
+   "method": "POST",
+   "url": "/api/ai/ask",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "code": 0,
+    "msg": "ok",
+    "data": {
+     "answer": "<p>长度为 n 的顺序表：</p><ul><li><b>插入</b>到第 i 个位置，需后移 <code>n - i + 1</code> 个元素；等概率平均移动 <code>n / 2</code> 个。</li><li><b>删除</b>第 i 个元素，需前移 <code>n - i</code> 个元素；等概率平均移动 <code>(n - 1) / 2</code> 个。</li></ul><p>两者都是 O(n)，所以顺序表适合「查多改少」的场景。</p>",
+     "answer_content_type": "trusted_html",
+     "title": "顺序表插入 / 删除的平均移动次数",
+     "source": "local_kb",
+     "model": null
+    }
+   },
+   "location": ""
+  },
+  {
+   "label": "POST /api/ai/ask 未命中（模拟回答）",
+   "method": "POST",
+   "url": "/api/ai/ask",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "code": 0,
+    "msg": "ok",
+    "data": {
+     "answer": "<p>【模拟回答】已收到你的提问：「今天天气怎么样」。</p><p>大模型接口尚未接入。当前后端内置了本地知识库，你可以换个包含<b>数据结构术语</b>的问法（例如「KMP 的 next 数组怎么求」「快速排序为什么最坏 O(n²)」「循环队列怎么判满」），就能命中真实答案。</p><p class='text-muted'>接入大模型后，本接口将返回真实解答，前端无需改动。</p>",
+     "answer_content_type": "trusted_html",
+     "title": null,
+     "source": "mock",
+     "model": null
+    }
+   },
+   "location": ""
+  },
+  {
+   "label": "GET /api/health",
+   "method": "GET",
+   "url": "/api/health",
+   "status": 200,
+   "contentType": "application/json",
+   "body": {
+    "code": 0,
+    "msg": "ok",
+    "data": {
+     "service": "数据结构学习平台后端",
+     "version": "1.1.0",
+     "quiz_total": 112,
+     "quiz_categories": 6,
+     "kb_entries": 21,
+     "data_ok": true
+    }
+   },
+   "location": ""
+  },
+  {
+   "label": "GET /api/未知接口",
+   "method": "GET",
+   "url": "/api/not-a-route",
+   "status": 404,
+   "contentType": "application/json",
+   "body": {
+    "code": 1,
+    "msg": "接口不存在：/api/not-a-route",
+    "data": null
+   },
+   "location": ""
+  },
+  {
+   "label": "POST /api/linkedlist/trace/insert-head 非法整数",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/insert-head",
+   "status": 422,
+   "contentType": "application/json",
+   "body": {
+    "__validation_error": true
+   },
+   "location": ""
+  },
+  {
+   "label": "POST /api/linkedlist/trace/delete-pos pos=0（小于下界）",
+   "method": "POST",
+   "url": "/api/linkedlist/trace/delete-pos",
+   "status": 422,
+   "contentType": "application/json",
+   "body": {
+    "__validation_error": true
+   },
+   "location": ""
+  },
+  {
+   "label": "GET /list.html",
+   "method": "GET",
+   "url": "/list.html",
+   "status": 200,
+   "contentType": "text/html",
+   "body": {
+    "__html": true
+   },
+   "location": ""
+  },
+  {
+   "label": "GET /visual.html",
+   "method": "GET",
+   "url": "/visual.html",
+   "status": 302,
+   "contentType": "",
+   "location": "/list.html",
+   "body": null
+  },
+  {
+   "label": "GET /",
+   "method": "GET",
+   "url": "/",
+   "status": 200,
+   "contentType": "text/html",
+   "body": {
+    "__html": true
+   },
+   "location": ""
+  }
+ ]
+}

@@ -1,7 +1,7 @@
 /* ==========================================================================
    web/tests/list-page.test.js —— 单链表页集成测试（jsdom + 真实后端）
    --------------------------------------------------------------------------
-   前提：后端已启动  uvicorn main:app --port 8000
+   前提：后端已启动  仓库根执行 pnpm server
 
    运行：
      NODE_PATH=C:/Users/Rjx17/.workbuddy/binaries/node/workspace/node_modules \

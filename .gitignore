@@ -1,9 +1,3 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-
-.ipynb_checkpoints
-*/.ipynb_checkpoints/*
-
 # General
 .DS_Store
 
@@ -45,3 +39,6 @@ performance
 
 # Vite 构建产物（源码在 web/，产物不入库）
 web/dist/
+
+# Node 服务端产物（esbuild 单文件；npm 脚本可重建）
+server/dist/

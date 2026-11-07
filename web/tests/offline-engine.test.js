@@ -1,9 +1,9 @@
 /* ==========================================================================
    web/tests/offline-engine.test.js —— 离线 REST 适配层 ↔ golden 对齐
    --------------------------------------------------------------------------
-   parity.test.js 验的是「引擎函数 = Python 函数」。这一层验的是它上面那层：
+   parity.test.js 验的是「引擎函数 = golden 快照里的语义」。这一层验的是它上面那层：
    `POST /api/linkedlist/trace/delete-pos {pos:2}` 这种路径 + 请求体，经
-   src/engine/offline.ts 映射后，返回的载荷是否**和 Python 逐字节一致**。
+   src/engine/offline.ts 映射后，返回的载荷是否**和线上服务逐字节一致**。
 
    为什么单独测：适配层是纯新增代码，parity 覆盖不到。写错一个 `body.pos`
    就会变成「位序永远是 undefined」——类型系统看不出来，页面上表现为越界报错，

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   server/src/app.ts —— 应用装配（main.py §0 的对等实现）
+   server/src/app.ts —— 应用装配
    --------------------------------------------------------------------------
    ★ 顺序不是风格问题，是正确性问题 ★
      Fastify 的 register 返回 thenable，await 它会触发整实例的 ready()。
@@ -8,7 +8,7 @@
      {statusCode,error,message}，而不是我们要的 {code,msg,data}。
      所以：两个处理器必须先装在根上下文，装配期间不 await register。
 
-   其余顺序与 Python 版一致：
+   装配顺序：
      CORS → /visual.html 重定向（必须早于静态，否则真文件会被命中）
      → 业务路由 → 静态托管
 
@@ -59,7 +59,7 @@ export function buildApp(): FastifyInstance {
     const e = error as { statusCode?: number; message?: string };
     const status = e.statusCode ?? 500;
 
-    // Fastify 自己抛的「请求体不是合法 JSON」：对齐 FastAPI 的 422
+    // Fastify 自己抛的「请求体不是合法 JSON」：统一收成 422（参数校验失败语义）
     if (status === 400) {
       return reply.code(422).send({ code: 1, msg: '请求体不是合法 JSON', data: null });
     }

@@ -1,8 +1,8 @@
 /* ==========================================================================
    core/offline-data.js —— 前端离线快照（自动生成，勿手改）
    --------------------------------------------------------------------------
-   生成命令：cd backend && uv run python tools/gen_offline_data.py
-   数据源  ：backend/data/questions.json + backend/data/kb.json
+   生成命令：node tools/gen-offline-data.mjs
+   数据源  ：data/questions.json + data/kb.json
    ★ 含各题答案/解析，仅供「后端不可达」时的本地离线测试；线上接口不返回答案。
    ========================================================================== */
 (function () {

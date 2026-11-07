@@ -139,14 +139,14 @@ async function main() {
     await waitFor(() => doc.querySelector('#offline-banner'));
     const banner = doc.querySelector('#offline-banner');
     ok(/离线模式已启用/.test(banner.textContent), '横幅切到「离线模式已启用」（信息态）');
-    ok(/uvicorn/.test(banner.textContent), '横幅仍给出后端启动命令');
+    ok(/pnpm server/.test(banner.textContent), '横幅仍给出后端启动命令');
 
     // 分类与题目应由本地快照渲染出来
     const loaded = await waitFor(() => doc.querySelectorAll('#cat-tabs .tab').length >= 6);
     ok(loaded, '离线加载出全部分类标签（本地快照）');
     await waitFor(() => doc.querySelectorAll('#opts .opt').length === 4);
     ok(doc.querySelectorAll('#opts .opt').length === 4, '首题四个选项渲染成功');
-    ok(doc.querySelector('#opts').textContent.indexOf('uvicorn') === -1,
+    ok(doc.querySelector('#opts').textContent.indexOf('pnpm server') === -1,
       '题目区不再显示「需要后端」的降级说明（已走本地数据）');
     const diffEl = doc.querySelector('#q-diff');
     ok(!!diffEl && diffEl.hidden === false, '难度徽标可见');

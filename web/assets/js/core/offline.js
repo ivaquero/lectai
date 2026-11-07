@@ -5,12 +5,12 @@
    fetch 失败 / probe 探测到离线时，把请求转交 handle()，命中则直接返回
    与线上完全同形的 {ok,data,msg}，前端各页（刷题 / 答疑 / 首页统计）无感切换。
 
-   数据来自 core/offline-data.js 的 DS.OFFLINE（生成脚本见 backend/tools）。
+   数据来自 core/offline-data.js 的 DS.OFFLINE（生成脚本见 tools/gen-offline-data.mjs）。
 
    本模块管两件事：
      1) 题库 / 答疑 / 健康 —— 数据来自 core/offline-data.js 的本地快照；
-     2) 链表 / 栈 / 队列的轨迹 —— 由 src/engine（Python 引擎的 TS 镜像，
-        与后端靠 golden 快照逐字节对齐）现场生成，见 src/engine/offline.ts。
+     2) 链表 / 栈 / 队列的轨迹 —— 由 src/engine（与冻结参考实现逐字节对齐的
+        TS 引擎）现场生成，见 src/engine/offline.ts。
 
    ★ 边界：
      · 轨迹引擎是按需加载的独立 chunk：页面声明 data-offline-trace 且真的需要时

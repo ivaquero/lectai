@@ -40,7 +40,7 @@
       setBadge(
         'online',
         '后端已连接',
-        'FastAPI 已连接 · ' + (b.base || location.origin) + ' · 题库 ' + total + ' 题'
+        '后端已连接 · ' + (b.base || location.origin) + ' · 题库 ' + total + ' 题'
       );
     } else if (window.DS.offline && window.DS.offline.traceAvailable()) {
       setBadge(
@@ -98,15 +98,15 @@
       el.className = 'offline-banner info';
       el.innerHTML =
         '<b>离线模式已启用</b>' +
-        '<span>后端未连接，' + parts.join('；') + '。要恢复后端：在 <code>backend</code> 目录执行 ' +
-        '<code>uvicorn main:app --port 8000</code> 后点重试。</span>' +
+        '<span>后端未连接，' + parts.join('；') + '。要恢复后端：在仓库根执行 ' +
+        '<code>pnpm server</code> 后点重试。</span>' +
         '<button class="btn" type="button" id="banner-retry">重试</button>';
     } else {
       el.className = 'offline-banner';
       el.innerHTML =
         '<b>后端未连接</b>' +
-        '<span>本页数据由 FastAPI 提供。在 <code>backend</code> 目录执行 ' +
-        '<code>uvicorn main:app --port 8000</code> 后点重试。</span>' +
+        '<span>本页数据由本地服务提供。在仓库根执行 ' +
+        '<code>pnpm server</code> 后点重试。</span>' +
         '<button class="btn" type="button" id="banner-retry">重试</button>';
     }
     $('#banner-retry').onclick = () => {

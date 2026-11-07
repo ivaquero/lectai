@@ -1,11 +1,11 @@
 /* ==========================================================================
-   server/src/routes/quiz.ts —— 题库接口（main.py §4 的对等实现）
+   server/src/routes/quiz.ts —— 题库接口
    --------------------------------------------------------------------------
    契约要点（不能改）：
      · 取题接口永不返回 ans / exp / key —— 防作弊，判题只能在服务端做；
      · 判题结果带 answer_content_type / key_point_content_type，
        前端据此决定用 textContent 还是 sanitize 后的 innerHTML；
-     · 统计按会话累计，accuracy 用「Python round 语义」保留一位小数。
+     · 统计按会话累计，accuracy 保留一位小数且必须是银行家舍入（见 round1）。
    ========================================================================== */
 
 import type { FastifyInstance, FastifyRequest } from 'fastify';
@@ -21,9 +21,9 @@ function sid(req: FastifyRequest): string | string[] | undefined {
 }
 
 /**
- * Python 的 round(x, 1) 是「四舍六入五取偶」，Math.round 是「五入」。
- * 统计里会出现 1/16 → 6.25 这种正好落在 .x5 的值，两者会差 0.1，
- * 所以这里显式实现银行家舍入，保证与 Python 输出一致。
+ * 银行家舍入（round half to even）：Math.round 是「五入」，遇到 1/16 → 6.25
+ * 这类正好落在 .x5 的值会与既有统计差 0.1。契约快照里 accuracy 是逐字节比对的，
+ * 所以这里显式实现，而不是依赖 toFixed 的近似行为。
  */
 function round1(x: number): number {
   const scaled = x * 10;

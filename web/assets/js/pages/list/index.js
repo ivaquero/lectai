@@ -387,7 +387,7 @@
     $('#canvas-wrap').innerHTML =
       '<div class="canvas-empty"><span class="mark" aria-hidden="true">!</span>' +
       '<span>后端未连接，本地轨迹引擎也未能加载。' +
-      '请在 backend 目录执行 <code>uvicorn main:app --port 8000</code> 后刷新。</span></div>';
+      '请在仓库根执行 <code>pnpm server</code> 后刷新。</span></div>';
     $('#btn-run').disabled = true;
     $('#btn-reset').disabled = true;
   }

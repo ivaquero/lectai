@@ -1,8 +1,8 @@
 {
   "name": "lectai",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "private": true,
-  "description": "数据结构学习平台：后端 Python（uv）+ 前端 web（pnpm workspace 唯一成员）",
+  "description": "数据结构学习平台：前端 web + 服务端 server 属 pnpm workspace，统一由 Node 提供运行时",
   "packageManager": "pnpm@12.18.0",
   "scripts": {
     "dev": "pnpm --filter lectai-web dev",
@@ -10,8 +10,12 @@
     "preview": "pnpm --filter lectai-web preview",
     "test": "pnpm --filter lectai-web test",
     "test:parity": "pnpm --filter lectai-web test:parity",
-    "test:http-parity": "pnpm --filter @lectai/server test:http-parity",
+    "test:http-contract": "pnpm --filter @lectai/server test:http-contract",
+    "test:all": "pnpm test && pnpm test:http-contract",
     "typecheck": "pnpm -r --if-present typecheck",
+    "data:questions": "node tools/build-questions.mjs",
+    "data:offline": "node tools/gen-offline-data.mjs",
+    "data:check": "node tools/build-questions.mjs --check && node tools/gen-offline-data.mjs --check",
     "server": "pnpm --filter @lectai/server start",
     "server:build": "pnpm --filter @lectai/server build",
     "server:dev": "pnpm --filter @lectai/server dev"

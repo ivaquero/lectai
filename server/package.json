@@ -10,7 +10,8 @@
     "start": "node dist/server.mjs",
     "dev": "node scripts/build.mjs --watch",
     "typecheck": "tsc --noEmit",
-    "test:http-parity": "node tests/http-parity.test.js"
+    "test:http-contract": "node tests/http-contract.test.js",
+    "test:record": "node tests/http-contract.test.js --record"
   },
   "dependencies": {
     "@fastify/cors": "^11.4.1",

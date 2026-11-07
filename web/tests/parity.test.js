@@ -1,5 +1,5 @@
 /* ==========================================================================
-   web/tests/parity.test.js —— TS 引擎 ↔ Python 引擎 逐字节对齐
+   web/tests/parity.test.js —— TS 引擎 ↔ golden 快照 逐字节对齐
    --------------------------------------------------------------------------
    这一步是移植的验收关。为什么必须做：渲染层只按 step.mark 上色、按 step.ptr
    定位，引擎移植错了不会抛异常，只会「颜色偶尔不对」「指针闪一下」。类型系统
@@ -7,12 +7,13 @@
    每一个快照的每个字段。
 
    数据来源：
-     web/tests/scenarios/trace-cases.json      两端共用的操作脚本
-     web/tests/golden/trace-cases.golden.json  由 backend/tools/export_golden.py
-                                               用 Python 原实现导出
+     web/tests/scenarios/trace-cases.json      操作脚本
+     web/tests/golden/trace-cases.golden.json  冻结参考实现（迁移期的 Python 版
+                                               algo/*_trace.py）导出的行为快照
 
-   golden 过期后就重导（改了 algo/ 或 OPS 之后必须做）：
-     cd backend && uv run python tools/export_golden.py
+   golden 已冻结，不再重新生成——它就是「曾经的权威语义」。要新增场景就在
+   trace-cases.json 里加用例，并按同一形状手工补 golden，再在 PR 里逐字段 review。
+   改了引擎却让这个测试红，先怀疑引擎，不要直接改 golden。
 
    运行：仓库根 pnpm test:parity （不需要后端在跑）
    ========================================================================== */

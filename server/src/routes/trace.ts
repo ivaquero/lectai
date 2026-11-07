@@ -7,13 +7,12 @@
      GET  <prefix>/trace/state  当前容器状态（无轨迹）
      POST <prefix>/trace/<op>   执行一步，返回整条轨迹
 
-   ★ 与 Python 版的关键差异：没有 session_lock。
-     Python 的同步 def 跑在线程池，同一 sid 的并发请求会同时读写同一个容器，
-     所以每个接口都套了 RLock；Node 的单个请求处理函数不会被其他请求打断，
-     这层锁没有存在意义。代价是请求里不许再出现同步阻塞 I/O。
+   ★ 为什么没有 session_lock：Node 的单个请求处理函数不会被其他请求打断，
+     同一 sid 的并发请求不会交错执行，锁没有存在意义。代价是请求处理里不许
+     出现同步阻塞 I/O。
 
    ★ POST 路由的操作清单直接来自 OPS 登记表，而不是手写七次：
-     新增操作只需改 algo/ → 重导 ops.generated.json，路由自动跟上。
+     新增操作只需改 engine/ops.table.json，路由自动跟上。
    ========================================================================== */
 
 import type { FastifyInstance, FastifyRequest } from 'fastify';
@@ -30,9 +29,9 @@ interface KindSpec {
   routeBase: string;
   /** 应答里的 module 名（链表叫 linkedlist，不是 list） */
   moduleName: string;
-  /** /ops 里的 max_nodes；队列是「容量 - 1」，与 Python 侧一致 */
+  /** /ops 里的 max_nodes；队列是「容量 - 1」，留一个单元区分空与满 */
   maxNodes: number;
-  /** build 的 values 上限（Python 的 ValuesIn 三处都用 ST.MAX_ITEMS） */
+  /** build 的 values 上限（三个容器都取各自引擎的 MAX_ITEMS 语义） */
   valuesMax: number;
 }
 
@@ -52,7 +51,7 @@ const SPECS: Record<Kind, KindSpec> = {
   queue: {
     routeBase: '/api/queue',
     moduleName: 'queue',
-    // Python: _ops_payload("queue", Q.OPS, Q.CAPACITY - 1)
+    // 循环队列牺牲一个单元来区分空与满，所以对外报的容量是 CAPACITY - 1
     maxNodes: Q.CAPACITY - 1,
     valuesMax: Q.MAX_ITEMS
   }

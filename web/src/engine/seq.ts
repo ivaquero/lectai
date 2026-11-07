@@ -1,7 +1,8 @@
 /* ==========================================================================
    engine/seq.ts —— 顺序结构（栈 / 循环队列）轨迹记录的公共底座
    --------------------------------------------------------------------------
-   逐行对应 backend/algo/_seq_base.py。三处不可改写的语义：
+   逐行对应冻结的参考实现（迁移期的 Python `algo/_seq_base.py`，行为快照见
+   web/tests/golden/）。三处不可改写的语义：
 
    1. 标签 a1、a2…  按容器既有顺序编号（栈：栈底→栈顶；队列：队头→队尾）
    2. 粘性指针（P-003）  anchorKeys 里的指针名，即使某步被整体重赋 ptr 时漏掉，
@@ -54,7 +55,7 @@ export class SeqTracer {
   compares = 0;
   ptr: Record<string, PtrValueRaw> = {};
   aside: SeqNode[] = [];
-  /** 与 Python 的 _visited_ids / _new_ids 同义，供各 op_* 直接 add */
+  /** 与参考实现的 _visited_ids / _new_ids 同义，供各 op_* 直接 add */
   visitedIds = new Set<string>();
   newIds = new Set<string>();
 
@@ -182,7 +183,7 @@ export function seqStatePayload(
   return payload;
 }
 
-/** Python 的 str(list[int])：`[1, 2, 3]`。解说文案里带完整列表，格式必须一致 */
+/** 复刻 Python 的 str(list[int]) 格式：`[1, 2, 3]`。解说文案里带完整列表，格式必须一致 */
 export function pyListRepr(values: readonly number[]): string {
   return `[${values.join(', ')}]`;
 }

@@ -17,13 +17,10 @@ export const HOST = process.env.LECTAI_HOST ?? '127.0.0.1';
 export const PORT = Number(process.env.LECTAI_PORT ?? 8000);
 
 /**
- * 题库 / 知识库位置。
- *
- * 迁移期刻意指向 backend/data：Node 与 Python 读同一份 JSON，HTTP 对齐测试里
- * 任何差异就只可能来自代码而不是数据。Python 侧退场时把这两个文件挪到仓库根
- * data/，改这里一行即可（见 server/README.md 的切换清单）。
+ * 题库 / 知识库位置：仓库根 data/{questions,kb}.json。
+ * 与其他数据表（cpp-stl-*.csv 等）同处一个目录，构建期工具与运行期服务读同一份。
  */
-export const DATA_DIR = process.env.LECTAI_DATA_DIR ?? resolve(REPO_ROOT, 'backend', 'data');
+export const DATA_DIR = process.env.LECTAI_DATA_DIR ?? resolve(REPO_ROOT, 'data');
 
 /**
  * 静态托管目录：显式指定优先；否则 dist 存在就用 dist（发布物，含 sw.js），
@@ -40,11 +37,11 @@ function resolveStaticDir(): string {
 
 export const STATIC_DIR = resolveStaticDir();
 
-/** 与 core/session.py 的同名环境变量保持一致 */
+/** 会话策略：TTL 秒数 + 会话数上限（超出按 LRU 淘汰） */
 export const SESSION_TTL_SEC = Number(process.env.LECTAI_SESSION_TTL ?? 3600);
 export const SESSION_MAX = Number(process.env.LECTAI_SESSION_MAX ?? 10000);
 
-/** CORS 白名单，逗号分隔；默认值与 main.py 的 _resolve_origins 完全一致 */
+/** CORS 白名单，逗号分隔；默认值覆盖本地开发端口与 file:// 直开两种场景 */
 export function allowedOrigins(): string[] {
   const raw = (process.env.ALLOWED_ORIGINS ?? '').trim();
   if (!raw) {

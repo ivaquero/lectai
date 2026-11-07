@@ -1,5 +1,5 @@
 {
-  "$comment": "轨迹引擎移植的共用场景脚本。Python 侧 tools/export_golden.py 用它导出 golden，TS 侧 tests/parity.test.js 用它重放并逐字节比对。两端读同一份，避免脚本本身漂移。op 取值与各 *_trace.py 的函数后缀一致：build / insert-head / insert-tail / delete-pos / delete-value / search / traverse / push / pop / peek / enqueue / dequeue。",
+  "$comment": "轨迹引擎的共用场景脚本。golden 快照（web/tests/golden/）按它逐场景重放导出，tests/parity.test.js 与 tests/offline-engine.test.js 都读同一份，避免脚本本身漂移。op 取值与引擎里的操作后缀一致：build / insert-head / insert-tail / delete-pos / delete-value / search / traverse / push / pop / peek / enqueue / dequeue。",
   "cases": [
     { "name": "list-build-basic", "container": "list", "steps": [{ "op": "build", "values": [3, 1, 4, 1, 5] }] },
     { "name": "list-build-empty", "container": "list", "steps": [{ "op": "build", "values": [] }] },

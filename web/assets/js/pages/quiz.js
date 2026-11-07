@@ -291,7 +291,7 @@
     $('#q-text').textContent = '';
     $('#opts').innerHTML =
       '<div class="note warn">后端未连接。题目与判题都在后端，' +
-      '请在 backend 目录执行 <code>uvicorn main:app --port 8000</code> 后刷新。</div>';
+      '请在仓库根执行 <code>pnpm server</code> 后刷新。</div>';
     $('#btn-submit').disabled = true;
     $('#btn-next').disabled = true;
   }

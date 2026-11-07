@@ -114,7 +114,7 @@
       bubble.innerHTML = '';
       bubble.appendChild(el('div.note.danger', {
         html: r.offline
-          ? '后端未连接。请在 backend 目录执行 <code>uvicorn main:app --port 8000</code> 后重试。'
+          ? '后端未连接。请在仓库根执行 <code>pnpm server</code> 后重试。'
           : ('请求失败：' + DS.esc(r.msg || '未知错误'))
       }));
       return;
