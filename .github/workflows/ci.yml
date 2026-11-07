@@ -1,0 +1,87 @@
+# =============================================================================
+# ci.yml —— 每次推送 / PR 跑一遍完整门禁
+# -----------------------------------------------------------------------------
+# 这里复刻的是本地那套「改完必须全绿」的检查，顺序有讲究：
+#
+#   1) install      —— 冻结锁文件；hoisted 布局，依赖只装根一份
+#   2) data:check   —— 先跑：题库与离线快照是生成物，落后于数据源就立刻报红，
+#                      不必等到测试阶段才发现「快照和题目对不上」
+#   3) typecheck    —— 两边共用一张类型网（web/engine 被 server 一并检查）
+#   4) build        —— 必须有：契约测试打的是 dist/server/server.mjs，
+#                      前端集成测试的页面资源也由服务端从 dist/web 托管
+#   5) test:all     —— check:deps + 前端七套 + HTTP 契约
+#
+# ★ 前端集成测试要一个真后端（127.0.0.1:8000）★
+#   web/tests 里 list-page / quiz-ai / offline 这几套把页面挂进 jsdom，但静态资源
+#   与 /api/* 都走真网络。所以第 5 步先起服务、等 /api/health 通，再跑测试；
+#   服务日志留在 RUNNER_TEMP，失败时打印出来，不用去猜 ECONNREFUSED 的根因。
+#
+#   契约测试自己 spawn 一个 8392 端口的进程（见 tests/http-contract.test.js），
+#   与上面这个 8000 的服务并存，不会打架。
+# =============================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+# 同一分支连续推送时取消上一轮，省额度也少看几条过时红灯
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 不写 version：pnpm 版本由根 package.json 的 packageManager 决定（12.18.0），
+      # 这样「本地用什么版本」和「CI 用什么版本」只有一个来源。
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile
+
+      - name: 校验生成物是否与数据源同步
+        run: pnpm data:check
+
+      - name: 类型检查
+        run: pnpm typecheck
+
+      - name: 构建产物
+        run: pnpm build
+
+      - name: 起服务并跑全部测试
+        run: |
+          LOG="$RUNNER_TEMP/server.log"
+          node dist/server/server.mjs > "$LOG" 2>&1 &
+          SRV=$!
+          ready=0
+          for _ in $(seq 1 40); do
+            if curl -sf http://127.0.0.1:8000/api/health > /dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          if [ "$ready" != "1" ]; then
+            echo "::error::服务在 40 秒内未就绪"
+            cat "$LOG"
+            exit 1
+          fi
+
+          if ! pnpm test:all; then
+            echo "::group::服务端日志"
+            cat "$LOG"
+            echo "::endgroup::"
+            exit 1
+          fi
+
+          kill "$SRV" 2>/dev/null || true
