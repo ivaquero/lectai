@@ -7,7 +7,7 @@
    JSON，写到 web/data/offline.json，由 core/offline.js 在探测到离线时 fetch。
 
    ★ 为什么是 JSON 而不是 JS ★
-     这份东西是数据，不是代码：放在 assets/js/core/ 下内联成 `DS.OFFLINE = {...}`
+     这份东西是数据，不是代码：内联进 core/offline-data.js（旧位置）时以 `DS.OFFLINE = {...}`
      既让 78KB 的载荷必须经由 JS 解析器，也让「数据」混进了源码目录。JSON 可以被
      `node tools/gen-offline-data.mjs --check` 直接比字节，也能被任何工具读取。
 

@@ -18,7 +18,7 @@ export function registerHealthRoutes(app: FastifyInstance): void {
   app.get('/api/health', async () =>
     ok({
       service: '数据结构学习平台后端',
-      version: '1.1.0', // 对外契约版本号；改动同步 tests/golden/http-contract.json
+      version: '1.1.0', // 对外契约版本号；改动同步 tests/http-contract.golden.json
       uptime_sec: Math.round((Date.now() - START) / 100) / 10,
       sessions: sessionCount(),
       session_policy: sessionStats(),

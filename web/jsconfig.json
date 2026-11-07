@@ -10,6 +10,6 @@
     "strict": false,
     "skipLibCheck": true
   },
-  "include": ["assets/js/**/*.js", "tests/**/*.js"],
+  "include": ["src/**/*.js", "tests/**/*.js"],
   "exclude": ["dist", "node_modules"]
 }

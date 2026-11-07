@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>可视化演示 · 数据结构学习平台</title>
 <meta name="description" content="单链表头插、尾插、按位删除、按值删除、查找、遍历的分步可视化，可单步、可回退，每步对应一行 C 代码。">
-<link rel="stylesheet" href="assets/css/tokens.css">
-<link rel="stylesheet" href="assets/css/base.css">
-<link rel="stylesheet" href="assets/css/layout.css">
-<link rel="stylesheet" href="assets/css/components.css">
-<link rel="stylesheet" href="assets/css/pages/list.css">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/pages/list.css">
 </head>
 <body data-page="visual" data-offline-trace>
 
@@ -169,8 +169,8 @@
 </footer>
 
 <!-- 单入口（Vite 多页构建）：原先 13 条 <script> 的依赖顺序收敛到 -->
-<!-- assets/js/entries/visual.js。本页同时注册 list/* 与 visual/* 两套渲染器， -->
+<!-- src/entries/visual.js。本页同时注册 list/* 与 visual/* 两套渲染器， -->
 <!-- 顺序会影响「后者覆盖前者」的注册结果，改动前务必看入口文件里的说明。 -->
-<script type="module" src="assets/js/entries/visual.js"></script>
+<script type="module" src="src/entries/visual.js"></script>
 </body>
 </html>

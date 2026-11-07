@@ -7,8 +7,8 @@
    每一个快照的每个字段。
 
    数据来源：
-     web/tests/scenarios/trace-cases.json      操作脚本
-     web/tests/golden/trace-cases.golden.json  冻结参考实现（迁移期的 Python 版
+     web/tests/trace-cases.json      操作脚本
+     web/tests/trace-cases.golden.json  冻结参考实现（迁移期的 Python 版
                                                algo/*_trace.py）导出的行为快照
 
    golden 已冻结，不再重新生成——它就是「曾经的权威语义」。要新增场景就在
@@ -145,10 +145,10 @@ function main() {
   const E = loadEngine();
 
   const scenarios = JSON.parse(
-    fs.readFileSync(path.join(__dirname, 'scenarios', 'trace-cases.json'), 'utf8'),
+    fs.readFileSync(path.join(__dirname, 'trace-cases.json'), 'utf8'),
   ).cases;
   const golden = JSON.parse(
-    fs.readFileSync(path.join(__dirname, 'golden', 'trace-cases.golden.json'), 'utf8'),
+    fs.readFileSync(path.join(__dirname, 'trace-cases.golden.json'), 'utf8'),
   );
 
   section('基线自检');

@@ -21,7 +21,7 @@ pnpm server              # 默认 127.0.0.1:8000；静态资源优先取 web/dis
 ```bash
 pnpm test                # 全部前端套件：sw + parity + offline-engine + list-page + quiz-ai + offline + visual-stackqueue
 pnpm test:parity         # 只跑「TS 引擎 ↔ golden 快照」逐字段比对（不需要后端）
-pnpm test:http-contract  # 服务端 HTTP 契约回归（自动起一个全新进程，回放 tests/golden 里的快照）
+pnpm test:http-contract  # 服务端 HTTP 契约回归（自动起一个全新进程，回放 tests/http-contract.golden.json 里的快照）
 pnpm test:all            # 上面两套一起跑
 pnpm typecheck           # 前端引擎 + 服务端的类型检查（pnpm -r）
 pnpm build               # 逐页构建到 web/dist（含 sw.js）
@@ -55,20 +55,22 @@ lectai/
 │   ├── src/routes/*.ts         trace（链栈队）/ quiz / ai / health
 │   ├── src/session.ts          TTL + LRU 会话（无锁：单线程不需要）
 │   ├── src/data.ts             题库 / 知识库懒加载 + mtime 热更新
-│   ├── tests/http-contract.test.js  HTTP 契约回归（--record 重录快照）
-│   ├── tests/golden/           契约快照：状态码 / 应答外壳 / 应答体
-│   └── scripts/build.mjs       esbuild 打成 dist/server.mjs（引擎内联，依赖 external）
+│   ├── build.mjs               esbuild 打成 dist/server.mjs（引擎内联，依赖 external）
+│   ├── tests/http-contract.test.js       HTTP 契约回归（--record 重录快照）
+│   └── tests/http-contract.golden.json   契约快照：状态码 / 应答外壳 / 应答体
 └── web/                        前端：原生 ES2020 源码 + 可选 Vite 构建链
     ├── *.html                  首页 / 单链表 / 刷题 / 答疑 / 栈队列
     ├── vite.config.mjs         dev 代理(/api→8000) + 相对 base（产物可部署到子路径）
     ├── scripts/build.mjs       逐页构建：每页单 chunk，避免共享 chunk 打乱执行顺序
-    ├── src/engine/             ★ 轨迹引擎（纯计算、不碰 DOM，浏览器与 Node 共用）
-    │   ├── ops.table.json      C 代码行 / 操作标题（前端只认这份表）
-    │   └── offline.ts          离线桥：REST 路径 → 本地引擎（容器 / 持久化 / err 外壳）
+    ├── css/                    tokens / base / layout / components + pages/*.css
     ├── data/offline.json       离线快照（纯数据，由 tools/gen-offline-data.mjs 生成，勿手改）
-    ├── tests/                  集成测试 + scenarios/ 场景脚本 + golden/ 对齐基线
-    ├── assets/css/tokens.css        换配色只动这个
-    └── assets/js/
+    ├── tests/                  集成测试 + trace-cases.json 脚本 + trace-cases.golden.json 基线
+    └── src/                    ★ 唯一源码根（engine 是 TS，其余是原生 JS）
+        ├── sw.js               Service Worker 模板（构建时注入版本号与预缓存清单）
+        ├── shell.js            顶栏渲染 / 状态徽标 / 快捷键提示
+        ├── engine/             ★ 轨迹引擎（纯计算、不碰 DOM，浏览器与 Node 共用）
+        │   ├── ops.table.json  C 代码行 / 操作标题（前端只认这份表）
+        │   └── offline.ts      离线桥：REST 路径 → 本地引擎（容器 / 持久化 / err 外壳）
         ├── entries/*.js        每页单入口：按原 <script> 顺序做副作用导入
         ├── core/api.js         后端地址 API_ORIGIN 单点 + fetch 封装 + 自动降级
         ├── core/offline.js     离线应答器：fetch 快照(data/offline.json) + 轨迹本地引擎
@@ -123,7 +125,7 @@ lectai/
 | POST /api/quiz/submit                                                          | `{question_id,answer}` → 判题 + 解析 + 记忆点（带 `*_content_type`）                             |
 | POST /api/ai/ask                                                               | `{question}` → `{answer,source,answer_content_type}`                                             |
 
-> `/reset` 兼容层保留，但新版可视化页改用 `/trace/state` 做首屏对齐。前端所有请求集中在 `web/assets/js/core/api.js` 的 `API_ORIGIN`（默认 `http://127.0.0.1:8000`），改后端地址只动这一处。
+> `/reset` 兼容层保留，但新版可视化页改用 `/trace/state` 做首屏对齐。前端所有请求集中在 `web/src/core/api.js` 的 `API_ORIGIN`（默认 `http://127.0.0.1:8000`），改后端地址只动这一处。
 
 ## 接入大模型（预留位）
 
@@ -131,7 +133,7 @@ lectai/
 
 ## 前端要点
 
-- **脚本加载**：每页只有一个 `<script type="module">` 入口（`assets/js/entries/<page>.js`），入口内按原顺序做副作用导入——顺序即依赖顺序。**代价**：ES module 受 CORS 约束，不能再双击 HTML 用 `file://` 打开；照常由后端托管（`http://127.0.0.1:8000/`）即可，或仓库根 `pnpm dev`（dev 把 `/api` 反代到 8000）、`pnpm preview`。
+- **脚本加载**：每页只有一个 `<script type="module">` 入口（`src/entries/<page>.js`），入口内按原顺序做副作用导入——顺序即依赖顺序。**代价**：ES module 受 CORS 约束，不能再双击 HTML 用 `file://` 打开；照常由后端托管（`http://127.0.0.1:8000/`）即可，或仓库根 `pnpm dev`（dev 把 `/api` 反代到 8000）、`pnpm preview`。
 - **离线开关**：页面用 `<body data-offline-snapshot>`（题库快照）与 `data-offline-trace`（本地轨迹引擎）声明支持的降级类型；两块资源都按需加载（快照 `fetch` 一份 88KB 的 JSON / 引擎 25KB 的独立 chunk），在线时一个字节都不下载。新增可视化页时两件事要做：入口里 `import '../core/offline.js'`，body 上标 `data-offline-trace`。
 - **响应式断点**：≥1080px 双栏（stage + 348px side）；760–1080px 单栏、统计 chip 2×2；<760px 导航折行横滚、C 代码收成抽屉、答题卡移到题下。
 - **无障碍**：Tab 首下即「跳到主要内容」；播放 / 单步是真 `<button>` 带 `aria-label`；画布 `<svg role="img">` 每步更新 `<title>`；高亮不只看颜色（待删斜线 + 虚线、比较描边）；尊重 `prefers-reduced-motion`。

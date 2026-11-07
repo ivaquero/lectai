@@ -1601,7 +1601,7 @@ function registerHealthRoutes(app2) {
     async () => ok({
       service: "\u6570\u636E\u7ED3\u6784\u5B66\u4E60\u5E73\u53F0\u540E\u7AEF",
       version: "1.1.0",
-      // 对外契约版本号；改动同步 tests/golden/http-contract.json
+      // 对外契约版本号；改动同步 tests/http-contract.golden.json
       uptime_sec: Math.round((Date.now() - START) / 100) / 10,
       sessions: sessionCount(),
       session_policy: sessionStats(),

@@ -243,7 +243,7 @@
   function ensureTrace() {
     if (T) return Promise.resolve(true);
     if (_traceP) return _traceP;
-    _traceP = import('../../../src/engine/offline')
+    _traceP = import('../engine/offline')
       .then(function (mod) {
         T = mod;
         /* 把在线期间记下的「后端最后状态」灌进本地容器，断网可无缝续演 */

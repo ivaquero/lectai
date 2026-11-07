@@ -98,10 +98,10 @@ function main() {
   const { bridge: B, engine: E } = loadModules();
 
   const scenarios = JSON.parse(
-    fs.readFileSync(path.join(__dirname, 'scenarios', 'trace-cases.json'), 'utf8'),
+    fs.readFileSync(path.join(__dirname, 'trace-cases.json'), 'utf8'),
   ).cases;
   const golden = JSON.parse(
-    fs.readFileSync(path.join(__dirname, 'golden', 'trace-cases.golden.json'), 'utf8'),
+    fs.readFileSync(path.join(__dirname, 'trace-cases.golden.json'), 'utf8'),
   );
 
   section('操作注册表（/ops）');

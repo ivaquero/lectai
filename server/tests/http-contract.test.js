@@ -6,7 +6,7 @@
    会话隔离、静态托管这些只在服务端存在的东西，只有对着真实进程发请求才能验。
 
    做法（record / replay 两态）：
-     · 契约快照在 tests/golden/http-contract.json，按**固定顺序**记录每一次
+     · 契约快照在 tests/http-contract.golden.json，按**固定顺序**记录每一次
        请求的 状态码 / content-type / Redirect / 应答体。
      · 默认（replay）：起一个全新 Node 进程，按同一顺序重放，逐条比对。
      · `--record`：重新录契约（覆盖快照）。
@@ -15,7 +15,7 @@
    为什么必须全新进程：Node/Item 的 id 是进程内全局自增，老进程的计数器早就
    跑远了；顺序也不再从 1 开始，快照必然对不上。
 
-   轨迹类应答体量大（与 web/tests/golden 内容重复），只锁「规范化后的指纹」；
+   轨迹类应答体量大（与 web/tests 内容重复），只锁「规范化后的指纹」；
    其余接口（外壳、题库、答疑、健康、兜底、静态）锁完整应答体，便于直接看出
    哪个字段漂了。
 
@@ -33,8 +33,8 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..', '..');
 const SERVER_DIR = path.resolve(HERE, '..');
 const NODE_ENTRY = path.join(SERVER_DIR, 'dist', 'server.mjs');
-const GOLDEN = path.join(HERE, 'golden', 'http-contract.json');
-const SCENARIOS = path.join(ROOT, 'web', 'tests', 'scenarios', 'trace-cases.json');
+const GOLDEN = path.join(HERE, 'http-contract.golden.json');
+const SCENARIOS = path.join(ROOT, 'web', 'tests', 'trace-cases.json');
 const DATA_DIR = path.join(ROOT, 'data');
 
 const PORT = Number(process.env.CONTRACT_PORT || 8392);
@@ -264,7 +264,7 @@ const volatileKeys = ['uptime_sec', 'sessions', 'session_policy'];
  *  · 参数校验失败（422）只锁状态码 —— 外壳是各家框架的方言，Node 侧另行断言
  *    必须是统一外壳，见 replay()；
  *  · /ops 的操作顺序不属于契约（前端只按 key 取），排序后比；
- *  · 轨迹类换成规范化指纹（体积大且已在 web/tests/golden 里锁过）。
+ *  · 轨迹类换成规范化指纹（体积大且已在 web/tests 里锁过）。
  */
 function normalize(url, raw) {
   const out = { status: raw.status };

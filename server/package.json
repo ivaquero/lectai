@@ -6,9 +6,9 @@
   "description": "数据结构学习平台后端（Node + Fastify），轨迹引擎与前端共用 web/src/engine",
   "main": "dist/server.mjs",
   "scripts": {
-    "build": "node scripts/build.mjs",
+    "build": "node build.mjs",
     "start": "node dist/server.mjs",
-    "dev": "node scripts/build.mjs --watch",
+    "dev": "node build.mjs --watch",
     "typecheck": "tsc --noEmit",
     "test:http-contract": "node tests/http-contract.test.js",
     "test:record": "node tests/http-contract.test.js --record"

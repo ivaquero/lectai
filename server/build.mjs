@@ -1,13 +1,13 @@
 /* ==========================================================================
-   server/scripts/build.mjs —— 用 esbuild 把服务打成一个 ESM 文件
+   server/build.mjs —— 用 esbuild 把服务打成一个 ESM 文件
    --------------------------------------------------------------------------
    为什么不用 tsc 产出：只有一个入口，esbuild 打包能做到「单文件 + 内联引擎 +
    保留依赖为 external」，比 tsc 的逐文件产物更好部署；类型检查仍交给
    `tsc --noEmit`（pnpm typecheck），两者职责分开。
 
    用法：
-     node scripts/build.mjs            一次性构建 → dist/server.mjs
-     node scripts/build.mjs --watch    监听改动：重建 + 重启子进程（开发用）
+     node build.mjs            一次性构建 → dist/server.mjs
+     node build.mjs --watch    监听改动：重建 + 重启子进程（开发用）
    ========================================================================== */
 
 import { spawn } from 'node:child_process';
@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 import * as esbuild from 'esbuild';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const ROOT = resolve(HERE, '..');
+const ROOT = HERE;
 const OUT = resolve(ROOT, 'dist', 'server.mjs');
 
 const watch = process.argv.includes('--watch');

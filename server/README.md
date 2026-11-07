@@ -50,10 +50,10 @@ src/
 
 ## HTTP 契约与快照
 
-`tests/golden/http-contract.json` 是服务端对外的行为快照，按**固定顺序**记录
+`tests/http-contract.golden.json` 是服务端对外的行为快照，按**固定顺序**记录
 129 次请求的状态码 / content-type / Redirect / 应答体：
 
-- 轨迹类接口体量大（与 `web/tests/golden/` 重复），只锁规范化指纹；
+- 轨迹类接口体量大（与 `web/tests/` 重复），只锁规范化指纹；
 - HTML 只锁「是 HTML」，改版不会碰红；
 - 健康检查剔除 `uptime_sec` / `sessions` / `session_policy` 这些天然变化的字段；
 - 422 只锁状态码，外壳由测试单独断言必须是 `code=1 + msg`。
