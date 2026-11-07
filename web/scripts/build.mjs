@@ -10,14 +10,18 @@
    若干并列的 <script type="module">，按标签顺序执行，页面逻辑跑到 keymap 之前，
    表现为 DS.keys 为 undefined、首屏序列空着、控制台报 reading 'bind'。
 
-   逐页构建后，每页只有一个输入：静态导入全部并入该页的唯一 chunk，动态导入
-   （offline-data 快照，75KB）仍是独立 chunk、保持按需加载。执行顺序由 ESM 语义
-   保证，不再依赖标签顺序。
+   逐页构建后，每页只有一个输入：静态导入全部并入该页的唯一 chunk，执行顺序由
+   ESM 语义保证，不再依赖标签顺序。
+
+   ★ 离线快照不是 JS ★
+     题库快照是纯数据 web/data/offline.json，由页面在探测到离线时 fetch（见
+     core/offline.js），因此它既不是 chunk、也不参与打包：这里原样拷一份到
+     dist/data/offline.json，让源码直开与构建产物两种模式的 URL 完全一致。
 
    用法：仓库根执行 pnpm build（web 是本仓库 pnpm workspace 的唯一成员）
    ========================================================================== */
 
-import { rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, rm, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 
@@ -45,9 +49,16 @@ for (const page of PAGES) {
   console.log(`  ✓ ${page}.html`);
 }
 
-/* Service Worker 必须最后生成：预缓存清单要覆盖上面 5 页产出的全部 HTML/JS/CSS。
-   版本号由产物内容哈希得出，因此这一步不改动任何已有文件的字节。 */
+/* 离线快照：纯数据，不参与打包，原样拷进产物（路径与源码模式一致）。
+   必须在 buildSw 之前完成，否则预缓存清单里会漏掉它 —— 那样真断网时
+   「页面能打开、快照取不到」，刷题/答疑会静默退回「需要后端」的提示。 */
 const dist = resolve(root, 'dist');
+await mkdir(resolve(dist, 'data'), { recursive: true });
+await copyFile(resolve(root, 'data/offline.json'), resolve(dist, 'data/offline.json'));
+console.log('  ✓ data/offline.json');
+
+/* Service Worker 必须最后生成：预缓存清单要覆盖上面 5 页产出的全部 HTML/JS/CSS
+   与上面这份快照。版本号由产物内容哈希得出，因此这一步不改动任何已有文件的字节。 */
 const sw = await buildSw(dist, resolve(root, 'src/sw/sw.js'));
 await writeFile(resolve(dist, 'sw.js'), sw.code, 'utf8');
 console.log(`  ✓ sw.js  v${sw.version}  预缓存 ${sw.precache.length} 项`);

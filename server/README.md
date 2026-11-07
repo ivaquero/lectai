@@ -75,4 +75,4 @@ src/
   （这也是契约测试坚持自起进程、并检查端口未被占用的原因）。
 - 会话状态在进程内存，重启即清空、无法多实例横向扩容。要横向扩容再谈 Redis / KV。
 - 本地引擎与离线快照是两套数据来源：断网后可视化走 `web/src/engine`，
-  题库走 `web/assets/js/core/offline-data.js`，两者都由 `tools/` 下的脚本产出。
+  题库走 `web/data/offline.json`，两者都由 `tools/` 下的脚本产出。

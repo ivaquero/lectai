@@ -1,10 +1,15 @@
 #!/usr/bin/env node
 /* ==========================================================================
-   tools/gen-offline-data.mjs —— 生成前端离线快照 offline-data.js
+   tools/gen-offline-data.mjs —— 生成前端离线快照 web/data/offline.json
    --------------------------------------------------------------------------
    用途：站点在「后端不可达」时自动降级到本地数据（刷题 / 答疑），无需任何服务。
-   本脚本把 data/questions.json（含答案）+ data/kb.json 打成一份纯前端可读的 JS，
-   写到 web/assets/js/core/offline-data.js。
+   本脚本把 data/questions.json（含答案）+ data/kb.json 打成一份**纯数据**的
+   JSON，写到 web/data/offline.json，由 core/offline.js 在探测到离线时 fetch。
+
+   ★ 为什么是 JSON 而不是 JS ★
+     这份东西是数据，不是代码：放在 assets/js/core/ 下内联成 `DS.OFFLINE = {...}`
+     既让 78KB 的载荷必须经由 JS 解析器，也让「数据」混进了源码目录。JSON 可以被
+     `node tools/gen-offline-data.mjs --check` 直接比字节，也能被任何工具读取。
 
    ★ 只有离线快照才把答案 ans/exp/key 打进前端；线上题库接口 /api/quiz/questions
      依旧不返回答案（防作弊）。离线降级是「本地测试」语义，答案落地到本机可接受。
@@ -21,7 +26,7 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const DATA_DIR = join(ROOT, 'data');
 const QUESTIONS_PATH = join(DATA_DIR, 'questions.json');
 const KB_PATH = join(DATA_DIR, 'kb.json');
-const OUT_PATH = join(ROOT, 'web', 'assets', 'js', 'core', 'offline-data.js');
+const OUT_PATH = join(ROOT, 'web', 'data', 'offline.json');
 
 /** 每题摊平成 {id, category, tag, question, options, answer, ...}；
     与后端 question_index() 的 id 规则保持一致：`${cat}-${i}`（i 从 1 起） */
@@ -61,6 +66,7 @@ function build(questionsRaw, kbRaw) {
   }
 
   return {
+    generated_by: 'tools/gen-offline-data.mjs',
     version: 1,
     meta: { quiz_total: total, quiz_categories: categories.length, kb_entries: kbRaw.length },
     categories,
@@ -69,32 +75,10 @@ function build(questionsRaw, kbRaw) {
   };
 }
 
-const HEADER = `/* ==========================================================================
-   core/offline-data.js —— 前端离线快照（自动生成，勿手改）
-   --------------------------------------------------------------------------
-   生成命令：node tools/gen-offline-data.mjs
-   数据源  ：data/questions.json + data/kb.json
-   ★ 含各题答案/解析，仅供「后端不可达」时的本地离线测试；线上接口不返回答案。
-   ========================================================================== */
-(function () {
-  'use strict';
-  var DS = (window.DS = window.DS || {});
-  DS.OFFLINE = `;
-
-const FOOTER = ';\n})();\n';
-
-function renderJs(bundle) {
-  // 紧凑序列化：文件体积直接计入首屏下载量
-  return HEADER + JSON.stringify(bundle) + FOOTER;
-}
-
-/** 沿用现有文件的换行符：仓库里既有 LF 也有 CRLF，生成器不该顺手改掉它 */
-function existingEol(path) {
-  try {
-    return readFileSync(path, 'utf8').includes('\r\n') ? '\r\n' : '\n';
-  } catch {
-    return '\n';
-  }
+/** 1 空格缩进：与 data/questions.json 同一套风格，人工排查时不必在一行里找字段。
+    线上多传输约 10KB，只在「已判定离线」时才拉，可接受。 */
+function renderJson(bundle) {
+  return JSON.stringify(bundle, null, 1) + '\n';
 }
 
 /** 比对前先抹平换行符差异：Windows 检出 / 不同编辑器都不该让 --check 假红 */
@@ -106,31 +90,30 @@ function main() {
   const kbRaw = JSON.parse(readFileSync(KB_PATH, 'utf8'));
 
   const bundle = build(questionsRaw, kbRaw);
-  const eol = existingEol(OUT_PATH);
-  const js = renderJs(bundle).replace(/\n/g, eol); // 载荷里没有裸换行（JSON 会转义）
+  const json = renderJson(bundle);
 
   if (check) {
     let cur;
     try {
       cur = readFileSync(OUT_PATH, 'utf8');
     } catch {
-      console.log('offline-data.js 不存在，请运行 node tools/gen-offline-data.mjs 生成');
+      console.log('web/data/offline.json 不存在，请运行 node tools/gen-offline-data.mjs 生成');
       return 1;
     }
-    if (stripEol(cur) !== stripEol(js)) {
-      console.log('offline-data.js 与数据源不一致，请重跑 node tools/gen-offline-data.mjs');
+    if (stripEol(cur) !== stripEol(json)) {
+      console.log('web/data/offline.json 与数据源不一致，请重跑 node tools/gen-offline-data.mjs');
       return 1;
     }
-    console.log('offline-data.js 已是最新');
+    console.log('web/data/offline.json 已是最新');
     return 0;
   }
 
   mkdirSync(dirname(OUT_PATH), { recursive: true });
-  writeFileSync(OUT_PATH, js, 'utf8');
+  writeFileSync(OUT_PATH, json, 'utf8');
 
   const m = bundle.meta;
   console.log(
-    `已写入 web/assets/js/core/offline-data.js —— ` +
+    `已写入 web/data/offline.json —— ` +
       `题 ${m.quiz_total} / 类 ${m.quiz_categories} / 知识库 ${m.kb_entries} 条`
   );
   return 0;

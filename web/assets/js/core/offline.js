@@ -5,10 +5,11 @@
    fetch 失败 / probe 探测到离线时，把请求转交 handle()，命中则直接返回
    与线上完全同形的 {ok,data,msg}，前端各页（刷题 / 答疑 / 首页统计）无感切换。
 
-   数据来自 core/offline-data.js 的 DS.OFFLINE（生成脚本见 tools/gen-offline-data.mjs）。
+   数据来自 web/data/offline.json（纯数据，生成脚本见 tools/gen-offline-data.mjs），
+   探测到离线时按需 fetch 一次，不占首屏。
 
    本模块管两件事：
-     1) 题库 / 答疑 / 健康 —— 数据来自 core/offline-data.js 的本地快照；
+     1) 题库 / 答疑 / 健康 —— 数据来自 web/data/offline.json 的本地快照；
      2) 链表 / 栈 / 队列的轨迹 —— 由 src/engine（与冻结参考实现逐字节对齐的
         TS 引擎）现场生成，见 src/engine/offline.ts。
 
@@ -23,8 +24,8 @@
   'use strict';
 
   var DS = (window.DS = window.DS || {});
-  // P-005：offline-data.js 现在可能尚未加载（改为按需动态注入），这里只做个初始引用，
-  // 真正就绪与否以 loadSnapshot() 之后的 O 为准。
+  // 快照是纯数据（web/data/offline.json），按需 fetch，可能尚未就绪；
+  // 这里只做初始引用（便于测试 / 调试直接注入），真正可用与否以 loadSnapshot() 之后的 O 为准。
   var O = DS.OFFLINE || null;
   var _loadP = null;
 
@@ -230,7 +231,7 @@
     return null; // 其它接口不降级，交回上层走原离线提示
   }
 
-  /** 快照是否已就绪（offline-data.js 是否加载） */
+  /** 快照是否已就绪（web/data/offline.json 是否取到） */
   function available() { return !!O; }
 
   /** 本地轨迹引擎是否已就绪 */
@@ -298,29 +299,55 @@
     return handle(method, path, body);
   }
 
-  /* ============================ 按需加载快照（P-005） ============================
-     offline-data.js 体积不小（约 78KB），过去在 index/quiz/ai 三页无条件同步加载，
-     即使后端在线也会白下载一份用不到的数据。现在改为：只有 api.js 的 probe() 探测到
-     后端离线、且本页声明了 data-offline-snapshot 时，才动态加载这份数据。
+  /* ============================ 按需加载快照 ============================
+     快照是纯数据 web/data/offline.json（约 88KB）。过去它以 `DS.OFFLINE = {...}`
+     内联在 core/offline-data.js 里、由 index/quiz/ai 三页无条件同步加载，即使后端
+     在线也会白下载 + 白解析一份用不到的数据。现在改为：只有 api.js 的 probe() 探测到
+     后端离线、且本页声明了 data-offline-snapshot 时，才 fetch 一次。
 
-     ★ Vite 化后改动（原 coreDir() 已删除）★
-     旧实现靠扫描文档里 core/offline.js 自己的 <script src> 反推目录，再动态插一条
-     <script>。改为单入口打包后，页面上不再存在该标签，路径反推必然失败，离线快照会
-     在生产构建里静默加载不出来。改用 ESM 动态 import()：
-       · dev / 原生 ESM —— 浏览器按相对模块路径加载；
-       · 构建 —— Vite 切成独立 chunk，78KB 仍只在离线时才下载。 */
+     ★ 路径为什么用相对 URL ★
+       产物 base 是 './'，站点可部署到任意子路径（/lectai/…），而页面都在站点根。
+       `new URL('data/offline.json', document.baseURI)` 在三种情形下都成立：
+         · 源码直开 —— /data/offline.json（server 托管 web/ 源码）
+         · 构建产物 —— /data/offline.json（build.mjs 把 web/data 拷进 dist/data）
+         · 子路径   —— /lectai/data/offline.json
+       不依赖打包器的 chunk 命名，也不用猜自己在 dist 里的位置。
+
+     ★ 真离线时这个 fetch 还能成吗 ★
+       能。断网时页面本身就来自 Service Worker 的预缓存，而清单收录 dist 下全部
+       文件（见 scripts/sw-manifest.mjs），data/offline.json 也在其中。 */
+  var SNAPSHOT_PATH = 'data/offline.json';
+
   function loadSnapshot() {
     if (O) return Promise.resolve(true);
     if (_loadP) return _loadP;
-    _loadP = import('./offline-data.js')
-      .then(function () {
-        O = (window.DS || {}).OFFLINE || null;
-        return !!O;
-      })
-      .catch(function () {
-        _loadP = null; // 允许下一次重试
-        return false;
-      });
+
+    var url;
+    try {
+      url = new URL(SNAPSHOT_PATH, document.baseURI).href;
+    } catch (e) {
+      return Promise.resolve(false);
+    }
+
+    try {
+      _loadP = fetch(url, { headers: { Accept: 'application/json' } })
+        .then(function (res) {
+          if (!res || !res.ok) throw new Error('HTTP ' + (res && res.status));
+          return res.json();
+        })
+        .then(function (data) {
+          O = data || null;
+          if (O) DS.OFFLINE = O; // 便于调试台查看，不是读路径
+          return !!O;
+        })
+        .catch(function () {
+          _loadP = null; // 允许下一次重试
+          return false;
+        });
+    } catch (e) {
+      // fetch 不可用（极老浏览器 / 被策略禁用）：按「没有快照」处理，不抛给调用方
+      return Promise.resolve(false);
+    }
     return _loadP;
   }
 

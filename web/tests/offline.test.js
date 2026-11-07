@@ -1,8 +1,13 @@
 /* ==========================================================================
    web/tests/offline.test.js —— 离线降级与无障碍基础（jsdom，不需要后端）
    --------------------------------------------------------------------------
-   页面资源仍从 http://127.0.0.1:8000 加载，但 fetch 被替换成必然失败，
+   页面资源仍从 http://127.0.0.1:8000 加载，但**凡 /api/ 的 fetch 一律失败**，
    用来模拟「后端没起」时四页的表现。
+
+   ★ 为什么只打挂 /api/ ★
+     离线降级的前提是「接口不可达」，静态资源由站点自身（或 Service Worker 的
+     预缓存）提供。题库快照就是一份静态数据 web/data/offline.json，若把它也打挂，
+     测的就不是「降级」而是「整站离线」，与真实场景不符，也会让断言失去意义。
 
    运行：
      NODE_PATH=C:/Users/Rjx17/.workbuddy/binaries/node/workspace/node_modules \
@@ -37,7 +42,7 @@ async function waitFor(cond, timeout) {
   return false;
 }
 
-/** 打开一个页面，并让它的所有 fetch 失败 */
+/** 打开一个页面，并让它的所有 /api/ 请求失败（静态资源照常可达） */
 async function open(page) {
   const html = fs.readFileSync(path.join(__dirname, '..', page), 'utf8');
   const vc = new VirtualConsole();
@@ -52,7 +57,13 @@ async function open(page) {
   const win = dom.window;
   const doc = win.document;
 
-  win.fetch = async () => { throw new Error('connect ECONNREFUSED 127.0.0.1:8000'); };
+  /* jsdom 不自带 fetch，用 Node 内置的实现顶上：非 /api/ 的请求真的发出去
+     （页面就在 8000 上托管），/api/ 的请求直接拒绝 —— 等价于「后端挂了」。 */
+  win.fetch = async (input, init) => {
+    const url = new URL(typeof input === 'string' ? input : (input && input.url) || '', BASE).href;
+    if (/(^|\/)api\//.test(url)) throw new Error('connect ECONNREFUSED 127.0.0.1:8000');
+    return fetch(url, init);
+  };
   win.AbortController = AbortController;
   win.requestAnimationFrame = (fn) => setTimeout(() => fn(Date.now()), 16);
   win.cancelAnimationFrame = (id) => clearTimeout(id);
