@@ -3,7 +3,7 @@
   "version": "1.2.0",
   "private": true,
   "type": "module",
-  "description": "数据结构学习平台后端（Node + Fastify），轨迹引擎与前端共用 web/src/engine",
+  "description": "数据结构学习平台后端（Node + Fastify），轨迹引擎与前端共用 web/engine",
   "main": "../dist/server/server.mjs",
   "scripts": {
     "build": "node build.mjs",

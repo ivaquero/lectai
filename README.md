@@ -6,11 +6,11 @@
 
 依赖只装一份：`nodeLinker: hoisted`（写在 `pnpm-workspace.yaml` 里，pnpm 12 的设置只认这个文件），全部包平铺在根 `node_modules`，`web/` 与 `server/` 下**没有**自己的 `node_modules`。代价是解析不再受 `package.json` 约束，未声明的包也能 import 到，所以用 `pnpm check:deps` 扫描裸 import 与声明的差集来兜住（已并入 `pnpm test:all`）。
 
-**离线可用**：后端不可达时自动降级——题库 / 答疑 / 统计走本地快照，链表 / 栈 / 队列的逐步可视化走 `web/src/engine/` 的 TS 引擎（与冻结的 golden 快照逐字节对齐）。
+**离线可用**：后端不可达时自动降级——题库 / 答疑 / 统计走本地快照，链表 / 栈 / 队列的逐步可视化走 `web/engine/` 的 TS 引擎（与冻结的 golden 快照逐字节对齐）。
 
 ## 快速开始
 
-单一运行时：**Node**。服务端与前端共用同一份 `web/src/engine/` 轨迹引擎与仓库根 `data/` 数据。
+单一运行时：**Node**。服务端与前端共用同一份 `web/engine/` 轨迹引擎与仓库根 `data/` 数据。
 
 ```bash
 pnpm install
@@ -55,7 +55,7 @@ lectai/
 │   ├── gen-offline-data.mjs    生成前端离线快照 web/data/offline.json（改数据后重跑）
 │   └── check-deps.mjs          幽灵依赖检查：裸 import 与 package.json 声明做差集
 ├── server/                     Node 服务端（Fastify 5；内存态，重启即清空）
-│   ├── src/engine.ts           与 web/src/engine 的唯一耦合点（引擎同构复用）
+│   ├── src/engine.ts           与 web/engine 的唯一耦合点（引擎同构复用）
 │   ├── src/app.ts              装配：CORS / 路由 / 静态托管 / 兜底 / 错误外壳
 │   ├── src/{trace,quiz,ai,health}.ts  四个路由模块（链栈队轨迹 / 题库 / 答疑 / 健康）
 │   ├── src/session.ts          TTL + LRU 会话（无锁：单线程不需要）
@@ -70,18 +70,17 @@ lectai/
     ├── css/                    tokens / base / layout / components + pages/*.css
     ├── data/offline.json       离线快照（纯数据，由 tools/gen-offline-data.mjs 生成，勿手改）
     ├── tests/                  集成测试 + trace-cases.json 脚本 + trace-cases.golden.json 基线
-    └── src/                    ★ 唯一源码根（engine 是 TS，其余是原生 JS）
-        ├── sw.js               Service Worker 模板（构建时注入版本号与预缓存清单）
-        ├── shell.js            顶栏渲染 / 状态徽标 / 快捷键提示
-        ├── engine/             ★ 轨迹引擎（纯计算、不碰 DOM，浏览器与 Node 共用）
-        │   ├── ops.table.json  C 代码行 / 操作标题（前端只认这份表）
-        │   └── offline.ts      离线桥：REST 路径 → 本地引擎（容器 / 持久化 / err 外壳）
-        ├── entries/*.js        每页单入口：按原 <script> 顺序做副作用导入
-        ├── core/api.js         后端地址 API_ORIGIN 单点 + fetch 封装 + 自动降级
-        ├── core/offline.js     离线应答器：fetch 快照(data/offline.json) + 轨迹本地引擎
-        ├── core/sanitize.js    后端富文本白名单清洗
-        ├── core/trace.js       轨迹播放器（游标单步 / 回退）
-        └── pages/list/ops.js   新增链表操作只动这个（tabs 自动生成）
+    ├── sw.js                   Service Worker 模板（构建时注入版本号与预缓存清单）
+    ├── shell.js                顶栏渲染 / 状态徽标 / 快捷键提示
+    ├── engine/                 ★ 轨迹引擎（纯计算、不碰 DOM，浏览器与 Node 共用）
+    │   ├── ops.table.json      C 代码行 / 操作标题（前端只认这份表）
+    │   └── offline.ts          离线桥：REST 路径 → 本地引擎（容器 / 持久化 / err 外壳）
+    ├── entries/*.js            每页单入口：按原 <script> 顺序做副作用导入（engine/ 是 TS，其余为原生 JS）
+    ├── core/api.js             后端地址 API_ORIGIN 单点 + fetch 封装 + 自动降级
+    ├── core/offline.js         离线应答器：fetch 快照(data/offline.json) + 轨迹本地引擎
+    ├── core/sanitize.js        后端富文本白名单清洗
+    ├── core/trace.js           轨迹播放器（游标单步 / 回退）
+    └── pages/list/ops.js       新增链表操作只动这个（tabs 自动生成）
 
 dist/                            发布物（gitignore，由 pnpm build 生成）
 ├── web/                         静态站：五页 + assets + data/offline.json + sw.js
@@ -92,16 +91,16 @@ dist/                            发布物（gitignore，由 pnpm build 生成�
 
 ## 架构与设计取舍
 
-三句话：**算法只有一份**（`web/src/engine/`，服务端与浏览器离线版共用），每个操作返回**整条步骤轨迹**而非最终状态；**前端是纯播放器**（游标前后移动 = 单步 / 回退，无需逆操作）；**会话按 `X-Session-Id` 隔离**，链表 / 栈 / 队列 / 刷题统计共用一个 store。
+三句话：**算法只有一份**（`web/engine/`，服务端与浏览器离线版共用），每个操作返回**整条步骤轨迹**而非最终状态；**前端是纯播放器**（游标前后移动 = 单步 / 回退，无需逆操作）；**会话按 `X-Session-Id` 隔离**，链表 / 栈 / 队列 / 刷题统计共用一个 store。
 
 - **自动离线降级（题库 / 答疑 / 首页统计 / 可视化）**：后端不可达时，`core/api.js` 的 `probe()`/`request()` 先把请求交给 `core/offline.js`：
   - 题库类（`/api/health`、`/api/quiz/*`、`/api/ai/ask`）走本地快照 `web/data/offline.json`（由 `tools/gen-offline-data.mjs` 从 `data/questions.json`+`data/kb.json` 生成，纯数据、探测到离线才 fetch），应答与线上完全同形，取题、判题、解析、答疑、首页指标均可用；
-  - 轨迹类（`/api/linkedlist|stack|queue/trace/*` 与 `/ops`）走本地引擎 `web/src/engine/offline.ts`，**链表 / 栈 / 队列的逐步可视化在断网时照常演示**，含单步、回退、C 代码高亮。
+  - 轨迹类（`/api/linkedlist|stack|queue/trace/*` 与 `/ops`）走本地引擎 `web/engine/offline.ts`，**链表 / 栈 / 队列的逐步可视化在断网时照常演示**，含单步、回退、C 代码高亮。
   页面顶部挂「离线模式已启用」信息横幅并保留启动命令与重试。**线上取题接口依旧不返回答案**（答案只存在于离线段，供本地测试），防作弊原则不变。
-- **算法权威只有一份（`web/src/engine/`）**：服务端与离线版共用这份纯计算模块，语义不在别处独立演进。它的来源是迁移期的 Python 参考实现，行为已固化成 `web/tests/golden/trace-cases.golden.json`（36 个场景 / 569 个快照，含 10 个错误用例）；`pnpm test:parity` 逐字节比对，改错了立刻报红——这就是防漂移的机制，而不是靠自觉。
+- **算法权威只有一份（`web/engine/`）**：服务端与离线版共用这份纯计算模块，语义不在别处独立演进。它的来源是迁移期的 Python 参考实现，行为已固化成 `web/tests/golden/trace-cases.golden.json`（36 个场景 / 569 个快照，含 10 个错误用例）；`pnpm test:parity` 逐字节比对，改错了立刻报红——这就是防漂移的机制，而不是靠自觉。
 - **离线状态的交接**：在线期间 `api.js` 把后端每次应答里的容器值记到 `offline.js`（仅内存，不触发任何下载）；探测到离线时才 `import()` 引擎 chunk（约 25KB，独立分包），并把最近一次后端状态灌进本地容器，断网那一刻画布不会重置成空表。本地容器只存值序列，写 `sessionStorage`，所以离线刷新、切 `#stack` / `#queue` 这些整页重载都不丢状态。**已知差异**：本地容器没有服务端的历史轨迹（回放从当前离线后的操作开始）。
 - **三道验收关**：`tests/parity.test.js` 验「引擎函数 = golden 语义」；`tests/offline-engine.test.js` 验「REST 路径 + 请求体 → 引擎 → 载荷」与线上同形（同一批 golden，覆盖 `/ops`、`/trace/state`、全部 12 个操作、错误外壳与持久化）；`server/tests/http-contract.test.js` 验服务端真实的 HTTP 行为（状态码、应答外壳、会话隔离、静态托管）与冻结的契约快照一致。
-- **加操作的改动面**：`web/src/engine/` 里加 `op_*` 与 `ops.table.json` 的条目 → 按同一形状补 golden → 前端 `pages/list/ops.js`。漏补 golden，parity 会指着具体字段路径告诉你差在哪。
+- **加操作的改动面**：`web/engine/` 里加 `op_*` 与 `ops.table.json` 的条目 → 按同一形状补 golden → 前端 `pages/list/ops.js`。漏补 golden，parity 会指着具体字段路径告诉你差在哪。
 - **富文本白名单**：`/api/ai/ask`、`/api/quiz/submit` 的 HTML 字段带 `*_content_type`（`trusted_html` / `plain_text`）；只有 `trusted_html` 才经 `DS.sanitize()`（DOMParser + 标签 / 属性 / URL 协议白名单）后走 `innerHTML`，其余一律 `textContent`。
 - **安全**：CORS 走 `ALLOWED_ORIGINS` 白名单且 `allow_credentials=False`；sid 校验 `^[A-Za-z0-9_-]{1,64}$`（非法归 `default`）；会话 TTL 3600s + LRU 上限 10000（`LECTAI_SESSION_TTL/MAX` 可覆盖）。
 
@@ -136,7 +135,7 @@ dist/                            发布物（gitignore，由 pnpm build 生成�
 | POST /api/quiz/submit                                                          | `{question_id,answer}` → 判题 + 解析 + 记忆点（带 `*_content_type`）                             |
 | POST /api/ai/ask                                                               | `{question}` → `{answer,source,answer_content_type}`                                             |
 
-> `/reset` 兼容层保留，但新版可视化页改用 `/trace/state` 做首屏对齐。前端所有请求集中在 `web/src/core/api.js` 的 `API_ORIGIN`（默认 `http://127.0.0.1:8000`），改后端地址只动这一处。
+> `/reset` 兼容层保留，但新版可视化页改用 `/trace/state` 做首屏对齐。前端所有请求集中在 `web/core/api.js` 的 `API_ORIGIN`（默认 `http://127.0.0.1:8000`），改后端地址只动这一处。
 
 ## 接入大模型（预留位）
 
@@ -144,7 +143,7 @@ dist/                            发布物（gitignore，由 pnpm build 生成�
 
 ## 前端要点
 
-- **脚本加载**：每页只有一个 `<script type="module">` 入口（`src/entries/<page>.js`），入口内按原顺序做副作用导入——顺序即依赖顺序。**代价**：ES module 受 CORS 约束，不能再双击 HTML 用 `file://` 打开；照常由后端托管（`http://127.0.0.1:8000/`）即可，或仓库根 `pnpm dev`（dev 把 `/api` 反代到 8000）、`pnpm preview`。
+- **脚本加载**：每页只有一个 `<script type="module">` 入口（`entries/<page>.js`），入口内按原顺序做副作用导入——顺序即依赖顺序。**代价**：ES module 受 CORS 约束，不能再双击 HTML 用 `file://` 打开；照常由后端托管（`http://127.0.0.1:8000/`）即可，或仓库根 `pnpm dev`（dev 把 `/api` 反代到 8000）、`pnpm preview`。
 - **离线开关**：页面用 `<body data-offline-snapshot>`（题库快照）与 `data-offline-trace`（本地轨迹引擎）声明支持的降级类型；两块资源都按需加载（快照 `fetch` 一份 88KB 的 JSON / 引擎 25KB 的独立 chunk），在线时一个字节都不下载。新增可视化页时两件事要做：入口里 `import '../core/offline.js'`，body 上标 `data-offline-trace`。
 - **响应式断点**：≥1080px 双栏（stage + 348px side）；760–1080px 单栏、统计 chip 2×2；<760px 导航折行横滚、C 代码收成抽屉、答题卡移到题下。
 - **无障碍**：Tab 首下即「跳到主要内容」；播放 / 单步是真 `<button>` 带 `aria-label`；画布 `<svg role="img">` 每步更新 `<title>`；高亮不只看颜色（待删斜线 + 虚线、比较描边）；尊重 `prefers-reduced-motion`。

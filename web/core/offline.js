@@ -10,8 +10,8 @@
 
    本模块管两件事：
      1) 题库 / 答疑 / 健康 —— 数据来自 web/data/offline.json 的本地快照；
-     2) 链表 / 栈 / 队列的轨迹 —— 由 src/engine（与冻结参考实现逐字节对齐的
-        TS 引擎）现场生成，见 src/engine/offline.ts。
+     2) 链表 / 栈 / 队列的轨迹 —— 由 engine/（与冻结参考实现逐字节对齐的
+        TS 引擎）现场生成，见 engine/offline.ts。
 
    ★ 边界：
      · 轨迹引擎是按需加载的独立 chunk：页面声明 data-offline-trace 且真的需要时
@@ -29,7 +29,7 @@
   var O = DS.OFFLINE || null;
   var _loadP = null;
 
-  /* 轨迹引擎（src/engine）的动态句柄。T 为空表示 chunk 尚未加载；
+  /* 轨迹引擎（engine/）的动态句柄。T 为空表示 chunk 尚未加载；
      _seed 收集「在线期间后端最后一次给出的容器值」，离线启用时灌进本地容器，
      这样断网那一刻画布不会被重置成空表。 */
   var T = null;
@@ -239,7 +239,7 @@
 
   /* ============================ 轨迹引擎 ============================ */
 
-  /** 按需加载 src/engine 的桥接层（Vite 切成独立 chunk，在线时从不下载） */
+  /** 按需加载 engine/ 的桥接层（Vite 切成独立 chunk，在线时从不下载） */
   function ensureTrace() {
     if (T) return Promise.resolve(true);
     if (_traceP) return _traceP;

@@ -1,7 +1,7 @@
 # server/ —— Node 服务端（Fastify）
 
 站点唯一的后端：轨迹计算、题库、答疑、静态托管都在这里。轨迹引擎与前端离线版
-共用 `web/src/engine/`，数据读仓库根 `data/`。
+共用 `web/engine/`，数据读仓库根 `data/`。
 
 ## 命令
 
@@ -34,7 +34,7 @@ pnpm typecheck            # pnpm -r，前端与服务端一起检查
 
 ```text
 src/
-├── engine.ts        与 web/src/engine 的唯一耦合点（export * 转出）
+├── engine.ts        与 web/engine 的唯一耦合点（export * 转出）
 ├── env.ts           路径与配置；按 import.meta.url 定位，不依赖 cwd
 ├── http.ts          {code,msg,data} 外壳 + 参数校验（422 也套同一外壳）
 ├── session.ts       TTL + LRU；容器一律空表起步
@@ -73,5 +73,5 @@ src/
 - 结点 id 是进程内全局自增：两实例比对必须都是**全新进程**，否则 id 对不上
   （这也是契约测试坚持自起进程、并检查端口未被占用的原因）。
 - 会话状态在进程内存，重启即清空、无法多实例横向扩容。要横向扩容再谈 Redis / KV。
-- 本地引擎与离线快照是两套数据来源：断网后可视化走 `web/src/engine`，
+- 本地引擎与离线快照是两套数据来源：断网后可视化走 `web/engine`，
   题库走 `web/data/offline.json`，两者都由 `tools/` 下的脚本产出。

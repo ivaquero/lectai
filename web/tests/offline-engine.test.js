@@ -3,7 +3,7 @@
    --------------------------------------------------------------------------
    parity.test.js 验的是「引擎函数 = golden 快照里的语义」。这一层验的是它上面那层：
    `POST /api/linkedlist/trace/delete-pos {pos:2}` 这种路径 + 请求体，经
-   src/engine/offline.ts 映射后，返回的载荷是否**和线上服务逐字节一致**。
+   engine/offline.ts 映射后，返回的载荷是否**和线上服务逐字节一致**。
 
    为什么单独测：适配层是纯新增代码，parity 覆盖不到。写错一个 `body.pos`
    就会变成「位序永远是 undefined」——类型系统看不出来，页面上表现为越界报错，
@@ -53,8 +53,8 @@ function loadModules() {
   const out = esbuild.buildSync({
     stdin: {
       contents: [
-        "export * as bridge from './src/engine/offline.ts';",
-        "export * as engine from './src/engine/index.ts';",
+        "export * as bridge from './engine/offline.ts';",
+        "export * as engine from './engine/index.ts';",
       ].join('\n'),
       resolveDir: WEB_ROOT,
       loader: 'ts',
@@ -66,7 +66,7 @@ function loadModules() {
     write: false,
     logLevel: 'silent',
   });
-  const filename = path.join(WEB_ROOT, 'src', '__offline_bundle.js');
+  const filename = path.join(WEB_ROOT, '__offline_bundle.js');
   const m = new Module(filename, module);
   m.filename = filename;
   m.paths = Module._nodeModulePaths(path.dirname(filename));

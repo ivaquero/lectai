@@ -67,7 +67,7 @@ console.log('  ✓ data/offline.json');
 
 /* Service Worker 必须最后生成：预缓存清单要覆盖上面 5 页产出的全部 HTML/JS/CSS
    与上面这份快照。版本号由产物内容哈希得出，因此这一步不改动任何已有文件的字节。 */
-const sw = await buildSw(dist, resolve(root, 'src/sw.js'));
+const sw = await buildSw(dist, resolve(root, 'sw.js'));
 await writeFile(resolve(dist, 'sw.js'), sw.code, 'utf8');
 console.log(`  ✓ sw.js  v${sw.version}  预缓存 ${sw.precache.length} 项`);
 

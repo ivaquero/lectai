@@ -180,7 +180,7 @@ const req = (rel, mode, headers) => ({
 
 async function main() {
   const swMod = await import(pathToFileURL(path.join(ROOT, 'scripts/sw-manifest.mjs')).href);
-  const template = fs.readFileSync(path.join(ROOT, 'src/sw.js'), 'utf8');
+  const template = fs.readFileSync(path.join(ROOT, 'sw.js'), 'utf8');
 
   /* ------------------------------------------------ 清单与版本（纯函数） */
 

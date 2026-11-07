@@ -12,7 +12,7 @@
 
    ★ 多页入口 ★
      5 个 HTML 各自是一个入口，保持现有页面跳转（含 #hash 路由）不变；
-     每个入口只 import 对应的 src/entries/<page>.js。
+     每个入口只 import 对应的 entries/<page>.js。
 
    ★ cacheDir 指到仓库根 ★
      Vite 默认把依赖预构建缓存写进 <root>/node_modules/.vite，而本仓库用

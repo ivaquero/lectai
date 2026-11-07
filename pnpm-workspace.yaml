@@ -12,7 +12,7 @@ allowBuilds:
 # 依赖布局：hoisted（npm 风格扁平）
 #
 # web 与 server 跑在同一个 Node 运行时上，server 只通过一行相对路径
-# （server/src/engine.ts → ../../web/src/engine）复用前端引擎，两者之间没有真正的
+# （server/src/engine.ts → ../../web/engine）复用前端引擎，两者之间没有真正的
 # 包边界。isolated 布局会让每个子包各长一个 node_modules（哪怕里面全是符号链接），
 # 在 IDE / 搜索 / 备份面板里都是需要单独解释的目录。hoisted 之后：
 #

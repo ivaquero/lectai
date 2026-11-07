@@ -4,7 +4,7 @@
    输入是后端轨迹里的一个「步骤快照」，输出一段 SVG。
    渲染层不做任何算法判断：颜色来自 step.mark，指针来自 step.ptr。
 
-   步骤快照形状（见 src/engine/linkedlist.ts: push）
+   步骤快照形状（见 engine/linkedlist.ts: push）
      nodes  [{id, value, label}]   主链，从头到尾
      aside  [{id, value, label}]   暂离主链的结点（新建的 s、被摘下的 q）
      head   主链头结点 id | null

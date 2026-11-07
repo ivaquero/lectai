@@ -392,7 +392,7 @@
     $('#btn-reset').disabled = true;
   }
 
-  /* 离线但本地引擎可用：照常演示，轨迹改由 src/engine 生成（与后端逐字节对齐）。
+  /* 离线但本地引擎可用：照常演示，轨迹改由 engine/ 生成（与后端逐字节对齐）。
      顶部横幅（shell.js）已给出常驻说明，这里只补一条一次性提示。 */
   function markLocalEngine() {
     DS.toast.info('后端未连接，已切换到本地轨迹引擎（结果与后端一致）', 3600);
@@ -464,7 +464,7 @@
     $('#meta-sid').textContent = DS.api.sessionId().replace('web-', '');
 
     const b = await DS.api.probe();
-    /* 后端不可达但本页有本地轨迹引擎 → 照常引导，轨迹改由 src/engine 现场生成 */
+    /* 后端不可达但本页有本地轨迹引擎 → 照常引导，轨迹改由 engine/ 现场生成 */
     const localEngine = !b.online && DS.offline && DS.offline.traceAvailable();
     if (!b.online && !localEngine) {
       markOffline();

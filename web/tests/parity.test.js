@@ -46,7 +46,7 @@ function section(t) {
 
 /** 用 esbuild 把 TS 引擎打成 CJS 后编译进内存，避免落临时文件 */
 function loadEngine() {
-  const entry = path.join(__dirname, '..', 'src', 'engine', 'index.ts');
+  const entry = path.join(__dirname, '..', 'engine', 'index.ts');
   const out = esbuild.buildSync({
     entryPoints: [entry],
     bundle: true,
@@ -56,7 +56,7 @@ function loadEngine() {
     write: false,
     logLevel: 'silent',
   });
-  const filename = path.join(__dirname, '..', 'src', 'engine', '__bundled.js');
+  const filename = path.join(__dirname, '..', 'engine', '__bundled.js');
   const m = new Module(filename, module);
   m.filename = filename;
   m.paths = Module._nodeModulePaths(path.dirname(filename));

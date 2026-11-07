@@ -5,7 +5,7 @@
    （既不执行也不报错），而源码已改为「单入口 + ESM」。若不处理，4 个集成
    测试会拿到一个 window.DS 根本不存在的页面，全部断言假红。
 
-   做法：用 esbuild（Vite 的同款打包器）把 src/entries/<page>.js 连同其
+   做法：用 esbuild（Vite 的同款打包器）把 entries/<page>.js 连同其
    全部 import 打成一个 iife 经典脚本，再由测试调用 win.eval() 注入。等价于
    改造前「按顺序执行多条 <script src>」的效果，且不依赖任何网络请求。
 
@@ -22,11 +22,11 @@ const WEB_ROOT = path.resolve(__dirname, '..');
 
 /** 页面 → 入口文件。新增页面时这里与 entries/ 一并登记。 */
 const ENTRY_BY_PAGE = {
-  'index.html': 'src/entries/index.js',
-  'list.html': 'src/entries/list.js',
-  'quiz.html': 'src/entries/quiz.js',
-  'ai.html': 'src/entries/ai.js',
-  'visual.html': 'src/entries/visual.js'
+  'index.html': 'entries/index.js',
+  'list.html': 'entries/list.js',
+  'quiz.html': 'entries/quiz.js',
+  'ai.html': 'entries/ai.js',
+  'visual.html': 'entries/visual.js'
 };
 
 const cache = new Map();

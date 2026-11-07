@@ -35,7 +35,9 @@ const MEMBERS = [
   {
     name: 'lectai-web',
     dir: join(ROOT, 'web'),
-    scan: ['src', 'tests', 'scripts', 'vite.config.mjs']
+    /* 源码目录平铺在 web/ 下（没有 src/ 中间层），逐个登记才不会漏扫 */
+    scan: ['core', 'engine', 'entries', 'pages', 'shell.js', 'sw.js',
+           'tests', 'scripts', 'vite.config.mjs']
   },
   {
     name: '@lectai/server',
