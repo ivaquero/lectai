@@ -32,7 +32,7 @@ import { fileURLToPath } from 'node:url';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..', '..');
 const SERVER_DIR = path.resolve(HERE, '..');
-const NODE_ENTRY = path.join(SERVER_DIR, 'dist', 'server.mjs');
+const NODE_ENTRY = path.join(ROOT, 'dist', 'server', 'server.mjs');
 const GOLDEN = path.join(HERE, 'http-contract.golden.json');
 const SCENARIOS = path.join(ROOT, 'web', 'tests', 'trace-cases.json');
 const DATA_DIR = path.join(ROOT, 'data');

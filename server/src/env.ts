@@ -1,17 +1,35 @@
 /* ==========================================================================
    server/src/env.ts —— 运行期配置（全部走环境变量，代码里不写死路径）
    --------------------------------------------------------------------------
-   为什么路径要按 import.meta.url 推：src/ 与 dist/ 只差一层，打包前后都能
-   正确定位到 server/ 与仓库根，不依赖 process.cwd()（从哪个目录启动都行）。
+   ★ 仓库根靠「向上找 pnpm-workspace.yaml」定位，不数层级 ★
+     早期实现是 resolve(HERE, '..') 逐级上推，前提是产物与源码只差一层。产物
+     迁到 <repo>/dist/server/server.mjs 之后这个前提就没了（差三层），数层级
+     的写法会静默指错地方。改为从当前文件目录向上找 workspace 标记文件：源码
+     运行（server/src/）与打包后（dist/server/）都能定位到同一个仓库根，将来
+     再挪产物也不受影响。
+
+   其余路径一律由此推出，不依赖 process.cwd()（从哪个目录启动都行）。
    ========================================================================== */
 
 import { existsSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const HERE = dirname(fileURLToPath(import.meta.url)); // server/src 或 server/dist
-export const SERVER_ROOT = resolve(HERE, '..');
-export const REPO_ROOT = resolve(SERVER_ROOT, '..');
+const HERE = dirname(fileURLToPath(import.meta.url));
+
+/** 向上找到含 pnpm-workspace.yaml 的目录；monorepo 的唯一稳定锚点 */
+function findRepoRoot(start: string): string {
+  let dir = start;
+  for (;;) {
+    if (existsSync(join(dir, 'pnpm-workspace.yaml'))) return dir;
+    const up = resolve(dir, '..');
+    if (up === dir) throw new Error(`找不到仓库根（从 ${start} 向上无 pnpm-workspace.yaml）`);
+    dir = up;
+  }
+}
+
+export const REPO_ROOT = findRepoRoot(HERE);
+export const SERVER_ROOT = join(REPO_ROOT, 'server');
 
 export const HOST = process.env.LECTAI_HOST ?? '127.0.0.1';
 export const PORT = Number(process.env.LECTAI_PORT ?? 8000);
@@ -23,16 +41,16 @@ export const PORT = Number(process.env.LECTAI_PORT ?? 8000);
 export const DATA_DIR = process.env.LECTAI_DATA_DIR ?? resolve(REPO_ROOT, 'data');
 
 /**
- * 静态托管目录：显式指定优先；否则 dist 存在就用 dist（发布物，含 sw.js），
+ * 静态托管目录：显式指定优先；否则 dist/web 存在就用它（发布物，含 sw.js），
  * 否则用源码目录 web/（改完刷新即可，不用先构建）。
  */
 function resolveStaticDir(): string {
   const explicit = process.env.LECTAI_STATIC_DIR;
   if (explicit) return resolve(REPO_ROOT, explicit);
 
-  const dist = resolve(REPO_ROOT, 'web', 'dist');
+  const dist = join(REPO_ROOT, 'dist', 'web');
   if (existsSync(resolve(dist, 'index.html'))) return dist;
-  return resolve(REPO_ROOT, 'web');
+  return join(REPO_ROOT, 'web');
 }
 
 export const STATIC_DIR = resolveStaticDir();

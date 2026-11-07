@@ -53,7 +53,9 @@ export default defineConfig({
   },
 
   build: {
-    outDir: 'dist',
+    // 产物统一落到仓库根 dist/web（与 dist/server 并列，一个 dist/ 就是完整发布物）。
+    // 路径相对 web/ 根，vite preview 也从这里取。
+    outDir: '../dist/web',
     emptyOutDir: true,
     assetsDir: 'assets',
     // 与源码保持一致的语法水位；本项目的目标浏览器为现代 Chromium/Firefox

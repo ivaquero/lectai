@@ -16,9 +16,15 @@
    ★ 离线快照不是 JS ★
      题库快照是纯数据 web/data/offline.json，由页面在探测到离线时 fetch（见
      core/offline.js），因此它既不是 chunk、也不参与打包：这里原样拷一份到
-     dist/data/offline.json，让源码直开与构建产物两种模式的 URL 完全一致。
+     产物根的 data/offline.json，让源码直开与构建产物两种模式的 URL 完全一致。
 
-   用法：仓库根执行 pnpm build（web 是本仓库 pnpm workspace 的唯一成员）
+   ★ 产物在仓库根 dist/web/ ★
+     与 dist/server/ 并列，整个 dist/ 就是一份可直接部署的发布物。只清空
+     dist/web 自己（不能 rm 整个 dist，否则会顺手删掉并行构建的 server 产物）。
+     产物根的 URL 布局不受影响：服务端仍把 dist/web 当静态根，页面里的相对
+     路径一个都不用改。
+
+   用法：仓库根执行 pnpm build（web 与 server 是 pnpm workspace 的成员）
    ========================================================================== */
 
 import { copyFile, mkdir, rm, writeFile } from 'node:fs/promises';
@@ -33,7 +39,10 @@ import { buildSw } from './sw-manifest.mjs';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const PAGES = ['index', 'list', 'quiz', 'ai', 'visual'];
 
-await rm(resolve(root, 'dist'), { recursive: true, force: true });
+/** 产物根：仓库根的 dist/web（与 vite.config.mjs 的 build.outDir 同一处） */
+const dist = resolve(root, '..', 'dist', 'web');
+
+await rm(dist, { recursive: true, force: true });
 
 for (const page of PAGES) {
   await build({
@@ -52,7 +61,6 @@ for (const page of PAGES) {
 /* 离线快照：纯数据，不参与打包，原样拷进产物（路径与源码模式一致）。
    必须在 buildSw 之前完成，否则预缓存清单里会漏掉它 —— 那样真断网时
    「页面能打开、快照取不到」，刷题/答疑会静默退回「需要后端」的提示。 */
-const dist = resolve(root, 'dist');
 await mkdir(resolve(dist, 'data'), { recursive: true });
 await copyFile(resolve(root, 'data/offline.json'), resolve(dist, 'data/offline.json'));
 console.log('  ✓ data/offline.json');
@@ -63,4 +71,4 @@ const sw = await buildSw(dist, resolve(root, 'src/sw.js'));
 await writeFile(resolve(dist, 'sw.js'), sw.code, 'utf8');
 console.log(`  ✓ sw.js  v${sw.version}  预缓存 ${sw.precache.length} 项`);
 
-console.log(`构建完成：${PAGES.length} 页 + sw.js → dist/`);
+console.log(`构建完成：${PAGES.length} 页 + sw.js → dist/web/`);

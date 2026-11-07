@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "description": "数据结构学习平台后端（Node + Fastify），轨迹引擎与前端共用 web/src/engine",
-  "main": "dist/server.mjs",
+  "main": "../dist/server/server.mjs",
   "scripts": {
     "build": "node build.mjs",
-    "start": "node dist/server.mjs",
+    "start": "node ../dist/server/server.mjs",
     "dev": "node build.mjs --watch",
     "typecheck": "tsc --noEmit",
     "test:http-contract": "node tests/http-contract.test.js",

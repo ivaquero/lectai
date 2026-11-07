@@ -6,8 +6,10 @@
    `tsc --noEmit`（pnpm typecheck），两者职责分开。
 
    用法：
-     node build.mjs            一次性构建 → dist/server.mjs
+     node build.mjs            一次性构建 → 仓库根 dist/server/server.mjs
      node build.mjs --watch    监听改动：重建 + 重启子进程（开发用）
+
+   产物与 dist/web（前端静态站）并列，整个 dist/ 就是一份完整发布物。
    ========================================================================== */
 
 import { spawn } from 'node:child_process';
@@ -18,7 +20,7 @@ import * as esbuild from 'esbuild';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = HERE;
-const OUT = resolve(ROOT, 'dist', 'server.mjs');
+const OUT = resolve(ROOT, '..', 'dist', 'server', 'server.mjs');
 
 const watch = process.argv.includes('--watch');
 

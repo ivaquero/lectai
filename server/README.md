@@ -7,7 +7,7 @@
 
 ```bash
 pnpm install              # 仓库根
-pnpm server:build         # esbuild → server/dist/server.mjs（引擎内联，依赖 external）
+pnpm server:build         # esbuild → dist/server/server.mjs（仓库根；引擎内联，依赖 external）
 pnpm server               # 启动，默认 127.0.0.1:8000
 pnpm server:dev           # 监听 src/ 改动，重建后自动重启
 pnpm test:http-contract   # 起一个全新进程，按固定顺序回放 HTTP 契约快照
@@ -23,7 +23,7 @@ pnpm typecheck            # pnpm -r，前端与服务端一起检查
 | `LECTAI_HOST` | `127.0.0.1` | 监听地址 |
 | `LECTAI_SESSION_TTL` | `3600` | 会话闲置过期秒数 |
 | `LECTAI_SESSION_MAX` | `10000` | 会话上限（LRU 淘汰） |
-| `LECTAI_STATIC_DIR` | 自动 | `web/dist` 存在则用它，否则用 `web/` 源码 |
+| `LECTAI_STATIC_DIR` | 自动 | `dist/web` 存在则用它，否则用 `web/` 源码 |
 | `LECTAI_DATA_DIR` | `data/` | 题库 / 知识库目录（仓库根） |
 | `ALLOWED_ORIGINS` | 本地 8000 / 5500 / `null` | CORS 白名单，逗号分隔 |
 

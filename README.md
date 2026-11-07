@@ -15,7 +15,7 @@
 ```bash
 pnpm install
 pnpm server:build
-pnpm server              # 默认 127.0.0.1:8000；静态资源优先取 web/dist，没有则用 web/ 源码
+pnpm server              # 默认 127.0.0.1:8000；静态资源优先取 dist/web，没有则用 web/ 源码
 ```
 
 浏览器打开 <http://127.0.0.1:8000/>——前端由服务端一并托管，同源无跨域。
@@ -27,7 +27,7 @@ pnpm test:http-contract  # 服务端 HTTP 契约回归（自动起一个全新�
 pnpm test:all            # 上面两套一起跑
 pnpm typecheck           # 前端引擎 + 服务端的类型检查（pnpm -r）
 pnpm check:deps          # 幽灵依赖检查（hoisted 布局的护栏，已并入 test:all）
-pnpm build               # 一次构建两侧：web/dist（五页 + sw.js）与 server/dist
+pnpm build               # 一次构建两侧：dist/web（五页 + sw.js）与 dist/server
 pnpm build:web           # 只构建前端
 pnpm dev                 # Vite dev server，/api 反代到 8000
 pnpm data:check          # 校验题库结构 + 离线快照是否与数据源同步
@@ -60,7 +60,7 @@ lectai/
 │   ├── src/routes/*.ts         trace（链栈队）/ quiz / ai / health
 │   ├── src/session.ts          TTL + LRU 会话（无锁：单线程不需要）
 │   ├── src/data.ts             题库 / 知识库懒加载 + mtime 热更新
-│   ├── build.mjs               esbuild 打成 dist/server.mjs（引擎内联，依赖 external）
+│   ├── build.mjs               esbuild 打成 dist/server/server.mjs（引擎内联，依赖 external）
 │   ├── tests/http-contract.test.js       HTTP 契约回归（--record 重录快照）
 │   └── tests/http-contract.golden.json   契约快照：状态码 / 应答外壳 / 应答体
 └── web/                        前端：原生 ES2020 源码 + 可选 Vite 构建链
@@ -82,7 +82,13 @@ lectai/
         ├── core/sanitize.js    后端富文本白名单清洗
         ├── core/trace.js       轨迹播放器（游标单步 / 回退）
         └── pages/list/ops.js   新增链表操作只动这个（tabs 自动生成）
+
+dist/                            发布物（gitignore，由 pnpm build 生成）
+├── web/                         静态站：五页 + assets + data/offline.json + sw.js
+└── server/server.mjs            服务端单文件（引擎内联，依赖 external）
 ```
+
+整个 `dist/` 就是一份可部署产物：`dist/web` 交给任意静态服务器即可纯前端运行，`node dist/server/server.mjs` 则连 API 一起提供。
 
 ## 架构与设计取舍
 
